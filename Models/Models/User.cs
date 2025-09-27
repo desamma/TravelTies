@@ -35,9 +35,11 @@ namespace Models.Models
         
         public bool IsCompany { get; set; }
 
+        [MaxLength(5000)]
         public string Description { get; set; } = string.Empty; //for company
         
-        public string ContactInfo { get; set; } = string.Empty;
+        [MaxLength(5000)]
+        public string ContactInfo { get; set; } = string.Empty; //for company
         
         public virtual ICollection<User> Partners { get; set; } = new List<User>();
         

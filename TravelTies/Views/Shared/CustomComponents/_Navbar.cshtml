@@ -1,0 +1,43 @@
+@* _Navbar.cshtml *@
+<nav class="bg-white border-b border-gray-200 fixed w-full top-0 z-50">
+    <div class="container mx-auto flex items-center justify-between px-6 py-3">
+        <!-- Logo -->
+        <a href="/" class="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-green-500" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z" />
+                <circle cx="12" cy="9" r="2.5" fill="currentColor" />
+            </svg>
+            <span class="text-xl font-bold text-blue-600">Travel</span>
+            <span class="text-xl font-bold text-green-500">Ties</span>
+        </a>
+
+        <!-- Menu -->
+        <div class="flex items-center space-x-6">
+            <a href="/" class="flex items-center text-sm font-medium text-blue-600 hover:text-green-500">
+                <i class="fas fa-home mr-1"></i> Trang chủ
+            </a>
+            <a href="/tours" class="text-sm font-medium text-gray-700 hover:text-green-500">Tours</a>
+            <a href="/offers" class="text-sm font-medium text-gray-700 hover:text-green-500">Ưu đãi</a>
+            <a href="/featured" class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
+                <i class="far fa-star mr-1"></i> Nổi bật
+            </a>
+            <a href="/support" class="text-sm font-medium text-gray-700 hover:text-green-500">Hỗ trợ</a>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center space-x-4">
+            <!-- Language -->
+            <button class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
+                <i class="fas fa-globe mr-1"></i> VN
+            </button>
+
+            <!-- Login Button -->
+            <a asp-area="Identity" asp-page="/Account/Login"
+               class="px-4 py-1.5 border border-gray-300 text-sm font-medium text-gray-700 rounded-md flex items-center hover:bg-gray-100 transition">
+                <i class="fas fa-user mr-1"></i> Đăng nhập
+            </a>
+        </div>
+    </div>
+</nav>

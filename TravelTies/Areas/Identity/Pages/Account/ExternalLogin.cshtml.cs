@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +19,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Models.Models;
+using Newtonsoft.Json;
+using Utilities.Constants;
 
 namespace TravelTies.Areas.Identity.Pages.Account
 {
@@ -30,13 +33,14 @@ namespace TravelTies.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<User> _emailStore;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
+        private readonly IUserRepository  _userRepository;
 
         public ExternalLoginModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
             IUserStore<User> userStore,
             ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender, IUserRepository userRepository)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -44,6 +48,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
             _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -85,6 +90,18 @@ namespace TravelTies.Areas.Identity.Pages.Account
             [Required]
             [EmailAddress]
             public string Email { get; set; }
+            
+            [Required]
+            public string UserName { get; set; }
+            
+            [Required]
+            [DataType(DataType.Date)]
+            [Display(Name = "Date of Birth")]
+            [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+            public DateOnly? UserDOB { get; set; } = null;
+
+            public bool IsBanned { get; set; } = false;
+            public bool IsCompany { get; set; } = false;
         }
         
         public IActionResult OnGet() => RedirectToPage("./Login");
@@ -117,7 +134,23 @@ namespace TravelTies.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
-                return LocalRedirect(returnUrl);
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                HttpContext.Session.SetString("CurrentUser", JsonConvert.SerializeObject(user));
+                // Redirect based on user role
+                if (await _userManager.IsInRoleAsync(user, RoleConstants.Admin))
+                {
+                    returnUrl = Url.Action("Index", "Dashboard", new { area = "Admin" });
+                }
+                else if (await _userManager.IsInRoleAsync(user, RoleConstants.Company))
+                {
+                    returnUrl = Url.Action("Index", "Home", new { area = "Company" });
+                }
+                else
+                {
+                    returnUrl = Url.Action("Index", "Home", new { area = "User" });
+                }
+
+                if (returnUrl != null) return LocalRedirect(returnUrl);
             }
             if (result.IsLockedOut)
             {
@@ -125,6 +158,46 @@ namespace TravelTies.Areas.Identity.Pages.Account
             }
             else
             {
+                var userEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+                var existingUser = await _userRepository.GetAsync(u => u.Email == userEmail);
+                if (existingUser != null)
+                {
+                    if (existingUser.IsBanned)
+                    {
+                        ModelState.AddModelError("", "User account is banned!");
+                        return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+                    }
+                    var isEmailConfirmed = await _userManager.IsEmailConfirmedAsync(existingUser);
+                    
+                    // Make the account confirmed if not confirmed before:
+                    if (!isEmailConfirmed)
+                    {
+                        var token = await _userManager.GenerateEmailConfirmationTokenAsync(existingUser);
+                        await _userManager.ConfirmEmailAsync(existingUser, token);
+                    }
+                    HttpContext.Session.SetString("CurrentUser", JsonConvert.SerializeObject(existingUser));
+                    _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name,
+                        info.LoginProvider);
+                    await _signInManager.SignInAsync(existingUser, isPersistent: false, authenticationMethod: null);
+                    
+                    //Redirect based on user role
+                    if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.Admin))
+                    {
+                        returnUrl = Url.Action("Dashboard", "Admin", new { area = "Admin" });
+                    }
+                    else if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.User))
+                    {
+                        returnUrl = Url.Action(nameof(Index), "User", new { area = "User" });
+
+                    }
+                    else if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.Company))
+                    {
+                        returnUrl = Url.Action(nameof(Index), "Company", new { area = "Company" });
+                    }
+
+                    if (returnUrl != null) return LocalRedirect(returnUrl);
+                }
+                
                 // If the user does not have an account, then ask the user to create an account.
                 ReturnUrl = returnUrl;
                 ProviderDisplayName = info.ProviderDisplayName;
@@ -153,6 +226,10 @@ namespace TravelTies.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
+                
+                await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
+                
+                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -163,6 +240,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
+                        await _userManager.AddToRoleAsync(user, RoleConstants.User);
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
@@ -184,7 +262,25 @@ namespace TravelTies.Areas.Identity.Pages.Account
                         }
 
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                        return LocalRedirect(returnUrl);
+                        // Log the user login event
+                        _logger.LogInformation("User {Email} logged in at {Time}.", Input.Email, DateTime.UtcNow);
+                        
+                        //Redirect based on user role
+                        if (await _userManager.IsInRoleAsync(user, RoleConstants.Admin))
+                        {
+                            returnUrl = Url.Action("Dashboard", "Admin", new { area = "Admin" });
+                        }
+                        else if (await _userManager.IsInRoleAsync(user, RoleConstants.User))
+                        {
+                            returnUrl = Url.Action(nameof(Index), "User", new { area = "User" });
+
+                        }
+                        else if (await _userManager.IsInRoleAsync(user, RoleConstants.Company))
+                        {
+                            returnUrl = Url.Action(nameof(Index), "Company", new { area = "Company" });
+                        }
+
+                        if (returnUrl != null) return LocalRedirect(returnUrl);
                     }
                 }
                 foreach (var error in result.Errors)
@@ -200,16 +296,12 @@ namespace TravelTies.Areas.Identity.Pages.Account
 
         private User CreateUser()
         {
-            try
-            {
-                return Activator.CreateInstance<User>();
-            }
-            catch
-            {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(User)}'. " +
-                    $"Ensure that '{nameof(User)}' is not an abstract class and has a parameterless constructor, or alternatively " +
-                    $"override the external login page in /Areas/Identity/Pages/Account/ExternalLogin.cshtml");
-            }
+            var registerUser = new User();
+            registerUser.UserDOB = Input.UserDOB;
+            registerUser.UserAvatar = GeneralConstants.DefaultAvatar;
+            registerUser.IsCompany = Input.IsCompany;
+            registerUser.IsBanned = Input.IsBanned;
+            return registerUser;
         }
 
         private IUserEmailStore<User> GetEmailStore()

@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Models.Models;
+using Utilities.Constants;
 
 namespace TravelTies.Areas.Identity.Pages.Account
 {
@@ -30,13 +32,14 @@ namespace TravelTies.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<User> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly IUserRepository  _userRepository;
 
         public RegisterModel(
             UserManager<User> userManager,
             IUserStore<User> userStore,
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender, IUserRepository userRepository)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +47,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -79,6 +83,11 @@ namespace TravelTies.Areas.Identity.Pages.Account
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
+            
+            [Required]
+            [RegularExpression(@"^[a-zA-Z0-9\-._@+àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ() ]+$",
+                ErrorMessage = "Username must only contain numbers, letters, or the following special characters: \"-._@+()\"")]
+            public string UserName { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -98,6 +107,15 @@ namespace TravelTies.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+            
+            [Required]
+            [DataType(DataType.Date)]
+            [Display(Name = "Date of Birth")]
+            [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+            public DateOnly? UserDOB { get; set; } = null;
+
+            public bool IsBanned { get; set; } = false;
+            public bool IsCompany { get; set; } = false;
         }
 
 
@@ -110,6 +128,17 @@ namespace TravelTies.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
+            
+            // Check existing user
+            var existingUserName = await _userRepository.GetAsync(u => u.UserName.Equals(Input.UserName));
+            var existingEmail = await _userRepository.GetAsync(u => u.Email.Equals(Input.Email));
+            
+            if (existingEmail != null || existingUserName != null)
+            {
+                ModelState.AddModelError("", "Username or email is already taken.");
+                return Page();
+            }
+            
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
@@ -157,16 +186,14 @@ namespace TravelTies.Areas.Identity.Pages.Account
 
         private User CreateUser()
         {
-            try
-            {
-                return Activator.CreateInstance<User>();
-            }
-            catch
-            {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(User)}'. " +
-                    $"Ensure that '{nameof(User)}' is not an abstract class and has a parameterless constructor, or alternatively " +
-                    $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
-            }
+            var registerUser = new User();
+            registerUser.Email = Input.Email;
+            registerUser.UserName = Input.UserName;
+            registerUser.UserDOB = Input.UserDOB;
+            registerUser.UserAvatar = GeneralConstants.DefaultAvatar;
+            registerUser.IsCompany = Input.IsCompany;
+            registerUser.IsBanned = Input.IsBanned;
+            return registerUser;
         }
 
         private IUserEmailStore<User> GetEmailStore()
