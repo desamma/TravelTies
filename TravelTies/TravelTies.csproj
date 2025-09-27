@@ -37,7 +37,6 @@
     <Folder Include="Areas\Admin\" />
     <Folder Include="Areas\Billing\" />
     <Folder Include="Areas\Chat\" />
-    <Folder Include="Areas\User\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -68,8 +67,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="Views\Home\Index.cshtml" />
-    <AdditionalFiles Include="Views\Home\Privacy.cshtml" />
     <AdditionalFiles Include="Views\Shared\Error.cshtml" />
     <AdditionalFiles Include="Views\Shared\_Layout.cshtml" />
     <AdditionalFiles Include="Views\Shared\_ValidationScriptsPartial.cshtml" />

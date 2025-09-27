@@ -4,9 +4,12 @@ using DataAccess.Repositories.IRepositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Utilities.Utils;
+
+DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,8 +34,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 }, ServiceLifetime.Transient);
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
-
 // Identity and roles
 builder.Services
     .AddIdentity<User, IdentityRole<Guid>>(options =>
@@ -50,11 +51,11 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-/*todo://Configure .env config binding
+//Configure .env config binding
 builder.Configuration["EmailSettings:FromEmail"] = Environment.GetEnvironmentVariable("EMAILSETTINGS__FROMEMAIL");
 builder.Configuration["EmailSettings:FromPassword"] = Environment.GetEnvironmentVariable("EMAILSETTINGS__FROMPASSWORD");
 Console.WriteLine("EMAIL: " + builder.Configuration["EmailSettings:FromEmail"]);
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));*/
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // Repositories
 builder.Services.AddScoped(typeof(IGenericInterface<>), typeof(GenericRepository<>));
@@ -66,7 +67,7 @@ builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITourRepository, TourRepository>();
 builder.Services.AddScoped<ITourRepository, TourRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-//todo:builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Configure default routes (This should be after configured the Identity)
 builder.Services.ConfigureApplicationCookie(options =>
@@ -86,7 +87,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(60); // Set session timeout
 });
 
-/*todo:// Google login
+// Google login
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -101,7 +102,7 @@ builder.Services.AddAuthentication(options =>
     {
         option.ClientId = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTID");
         option.ClientSecret = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTSECRET");
-    });*/
+    });
 
 var app = builder.Build();
 
@@ -148,6 +149,5 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{area=Guest}/{controller=Home}/{action=Index}/{id?}");
-
+    pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
 app.Run();
