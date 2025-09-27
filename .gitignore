@@ -41,7 +41,7 @@ bld/
 #wwwroot/
 
 # Skip migrations
-/GalleryCart.DataAccess/Migrations/
+/DataAccess/Migrations/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
