@@ -3,7 +3,90 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="relative overflow-hidden">
+    <!-- Background Image with Overlay -->
+    <div class="relative h-[400px] md:h-[500px] w-full overflow-hidden">
+        <img src="@Url.Content("images/banahill.png")" 
+             alt="Cầu Vàng Đà Nẵng - Golden Bridge Ba Na Hills" 
+             class="absolute inset-0 w-full h-full object-cover blur-sm" />
+        <div class="absolute inset-0 bg-black/50"></div>
+
+        <!-- Main Content -->
+        <div class="relative z-10 container mx-auto px-4 h-full flex items-center">
+            <div class="w-full max-w-4xl mx-auto text-center text-white space-y-6">
+                <!-- Badge + Title -->
+                <div class="space-y-4">
+                    <span class="badge bg-white/20 text-white border-white/30 backdrop-blur-sm">
+                        🌟 Platform du lịch #1 Việt Nam
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-bold leading-tight">
+                        Khám phá Việt Nam cùng
+                        <span class="block text-accent drop-shadow-lg">Travel Ties</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+                        Nền tảng đặt tour trực tuyến hàng đầu, kết nối bạn với những trải nghiệm du lịch độc đáo và đáng nhớ khắp Việt Nam.
+                    </p>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-6 py-6 max-w-lg mx-auto">
+                    <div class="text-center">
+                        <div class="text-2xl md:text-3xl font-bold text-accent">500+</div>
+                        <div class="text-sm text-white/80">Tours đã tổ chức</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl md:text-3xl font-bold text-accent">10K+</div>
+                        <div class="text-sm text-white/80">Khách hàng hài lòng</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl md:text-3xl font-bold text-accent">4.8★</div>
+                        <div class="text-sm text-white/80">Đánh giá trung bình</div>
+                    </div>
+                </div>
+
+                <!-- Features (lg only) -->
+                <div class="hidden lg:block mt-8">
+                    <div class="grid grid-cols-4 gap-6 max-w-4xl mx-auto">
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg class="h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"/>
+                                </svg>
+                            </div>
+                            <div class="text-sm font-medium">An toàn & Tin cậy</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg class="h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <div class="text-sm font-medium">Chất lượng cao</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg class="h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                                </svg>
+                            </div>
+                            <div class="text-sm font-medium">Hỗ trợ 24/7</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg class="h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m9-9H3"/>
+                                </svg>
+                            </div>
+                            <div class="text-sm font-medium">Khắp Việt Nam</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorative Elements -->
+        <div class="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-20 left-20 w-24 h-24 bg-accent/20 rounded-full blur-2xl"></div>
+    </div>
+</section>
+
