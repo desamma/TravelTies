@@ -16,9 +16,9 @@
             <div class="w-full max-w-4xl mx-auto text-center text-white space-y-6">
                 <!-- Badge + Title -->
                 <div class="space-y-4">
-                    <span class="badge bg-white/20 text-white border-white/30 backdrop-blur-sm">
+                    @*<span class="badge bg-white/20 text-white border-white/30 backdrop-blur-sm">
                         🌟 Platform du lịch #1 Việt Nam
-                    </span>
+                    </span>*@
                     <h1 class="text-3xl md:text-5xl font-bold leading-tight">
                         Khám phá Việt Nam cùng
                         <span class="block text-accent drop-shadow-lg">Travel Ties</span>
@@ -28,7 +28,7 @@
                     </p>
                 </div>
 
-                <!-- Stats -->
+                @*<!-- Stats -->
                 <div class="grid grid-cols-3 gap-6 py-6 max-w-lg mx-auto">
                     <div class="text-center">
                         <div class="text-2xl md:text-3xl font-bold text-accent">500+</div>
@@ -42,7 +42,7 @@
                         <div class="text-2xl md:text-3xl font-bold text-accent">4.8★</div>
                         <div class="text-sm text-white/80">Đánh giá trung bình</div>
                     </div>
-                </div>
+                </div>*@
 
                 <!-- Features (lg only) -->
                 <div class="hidden lg:block mt-8">
@@ -89,4 +89,126 @@
         <div class="absolute bottom-20 left-20 w-24 h-24 bg-accent/20 rounded-full blur-2xl"></div>
     </div>
 </section>
+
+@await Component.InvokeAsync("FeaturedTours", new { count = 4 })
+
+<section class="bg-white py-16 px-4">
+    <div class="container mx-auto">
+        <!-- Title -->
+        <div class="text-center mb-12">
+            <h2 class="text-black text-3xl md:text-4xl font-bold mb-4">Tại sao chọn Travel Ties?</h2>
+            <p class="text-lg max-w-2xl mx-auto text-gray-700">
+                Chúng tôi cam kết mang đến những trải nghiệm du lịch tuyệt vời và đáng tin cậy nhất
+            </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 text-center">
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-primary mb-2">10,000+</div>
+                <div class="text-sm text-gray-700">Khách hàng hài lòng</div>
+            </div>
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-accent mb-2">500+</div>
+                <div class="text-sm text-gray-700">Tour được tổ chức</div>
+            </div>
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-green-500 mb-2">50+</div>
+                <div class="text-sm text-gray-700">Đối tác đại lý</div>
+            </div>
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-yellow-500 mb-2">4.8</div>
+                <div class="text-sm text-gray-700">Đánh giá trung bình</div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            <div class="card shadow-sm hover:shadow-md border-none">
+                <div class="card-body p-6">
+                    <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                        <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-black">Đảm bảo an toàn</h3>
+                    <p class="text-gray-700">Tất cả tour được kiểm duyệt kỹ lưỡng, bảo hiểm du lịch đầy đủ</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm hover:shadow-md border-none">
+                <div class="card-body p-6">
+                    <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
+                        <svg class="h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-black">Tour ghép chất lượng</h3>
+                    <p class="text-gray-700">Kết nối với những người bạn đồng hành cùng sở thích</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm hover:shadow-md border-none">
+                <div class="card-body p-6">
+                    <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
+                        <svg class="h-6 w-6 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-black">Hỗ trợ 24/7</h3>
+                    <p class="text-gray-700">Đội ngũ hỗ trợ khách hàng luôn sẵn sàng phục vụ bạn</p>
+                </div>
+            </div>
+            
+            <div class="card border-none shadow-sm hover:shadow-md transition-shadow">
+                <div class="card-body p-6">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m9-9H3"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-black">Đánh giá tin cậy</h3>
+                    <p class="text-gray-700">Hệ thống đánh giá minh bạch từ những khách hàng thực tế</p>
+                </div>
+            </div>
+
+            <div class="card border-none shadow-sm hover:shadow-md transition-shadow">
+                <div class="card-body p-6">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="h-6 w-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-black">Đại lý uy tín</h3>
+                    <p class="text-gray-700">Hợp tác với những đại lý du lịch được chứng nhận</p>
+                </div>
+            </div>
+
+            <div class="card border-none shadow-sm hover:shadow-md transition-shadow">
+                <div class="card-body p-6">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-black">Trải nghiệm địa phương</h3>
+                    <p class="text-gray-700">Khám phá văn hóa và ẩm thực đặc trưng từng vùng miền</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="text-center mt-16 p-8 text-white bg-blue-600 rounded-2xl">
+            <h3 class="text-2xl font-bold mb-4">Sẵn sàng khám phá?</h3>
+            <p class="text-lg text-white/90 mb-6">
+                Tham gia cùng hàng nghìn du khách đã tin tưởng Travel Ties
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/tours" class="btn btn-md btn-white bg-white text-blue-500 hover:bg-gray-200">Tìm tour ngay</a>
+                <a href="/partners" class="btn btn-md btn-outline bg-blue-600 text-white hover:bg-white/10">Trở thành đối tác</a>
+            </div>
+        </div>
+    </div>
+</section>
+
 

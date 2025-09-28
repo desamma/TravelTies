@@ -25,8 +25,10 @@ namespace Utilities.Utils
             // default admin user
             var adminEmail = "admin@gmail.com";
             var adminPassword = "123123";
+            var companyEmail = "company@gmail.com";
 
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            var companyUser = await userManager.FindByEmailAsync(companyEmail);
             if (adminUser == null)
             {
                 adminUser = new User
@@ -40,6 +42,24 @@ namespace Utilities.Utils
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(adminUser, "admin");
+                }
+            }
+
+            if (companyUser == null)
+            {
+                companyUser = new User
+                {
+                    UserName = "Company",
+                    Email = companyEmail,
+                    EmailConfirmed = true,
+                    IsBanned = false,
+                    IsCompany = true
+                };
+                var result = await userManager.CreateAsync(companyUser, adminPassword);
+
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(companyUser, "company");
                 }
             }
         }

@@ -22,7 +22,7 @@ namespace Models.Models
         public override string? PhoneNumber { get; set; }
         
         [Display(Name = "Gender")]
-        public bool Gender { get; set; }
+        public bool Gender { get; set; } // true: male, false: female
         
         [ValidateNever] 
         public string? UserAvatar { get; set; }

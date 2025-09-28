@@ -45,7 +45,7 @@ public class Tour
     public string? Picture { get; set; } // path or URL
 
     [Range(0, 100, ErrorMessage = "Discount percentage must be between 0 and 100.")]
-    public double Discount { get; set; }  // % discount
+    public decimal Discount { get; set; }  // % discount
 
     public bool SupportTourMatching { get; set; } // T/F
     
@@ -53,7 +53,7 @@ public class Tour
     public double Commission { get; set; } // % commission, set by admin
 
     [Range(0, int.MaxValue)]
-    public int View { get; set; } = 0;
+    public int Views { get; set; } = 0;
 
     [Range(0, 100)]
     public double ConversionRate { get; set; } // View/Ticket
