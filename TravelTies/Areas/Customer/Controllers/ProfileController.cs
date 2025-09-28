@@ -1,16 +1,16 @@
 ﻿using System.Security.Claims;
-using DataAccess;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using DataAccess;
+using TravelTies.Areas.Customer.Models;
+using Utilities.Utils; // CloudinaryUploader
 using Models.Models;
-using TravelTies.Areas.Customer.ViewModels;
-using Utilities.Utils;
 
 namespace TravelTies.Areas.Customer.Controllers
 {
     [Area("Customer")]
-    [Authorize(Roles = "customer")]
+    //[Authorize(Roles = "company")]
     public class ProfileController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -22,100 +22,114 @@ namespace TravelTies.Areas.Customer.Controllers
             _uploader = uploader;
         }
 
-        private bool TryGetUserId(out Guid userId)
+        private bool TryGetCompanyId(out Guid companyId)
         {
-            userId = Guid.Empty;
+            companyId = Guid.Empty;
             var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Guid.TryParse(uid, out userId);
+            return Guid.TryParse(uid, out companyId);
         }
 
-        // GET: /Customer/Profile
+        // GET: /Company/Profile
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (!TryGetUserId(out var userId)) return Unauthorized();
+            if (!TryGetCompanyId(out var companyId)) return Unauthorized();
 
             var user = await _db.Users
-                .Include(u => u.Tickets)
+                .Include(u => u.Tours)
                 .Include(u => u.Ratings)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .Include(u => u.Tickets)
+                .FirstOrDefaultAsync(u => u.Id == companyId);
 
             if (user == null) return NotFound();
 
-            var vm = new CustomerProfileVm
+            var vm = new ProfileVm
             {
                 Id = user.Id,
                 FullName = user.UserName,
                 Avatar = user.UserAvatar,
                 Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber,
+                Address = user.ContactInfo,
+                AgencyName = string.IsNullOrWhiteSpace(user.Description) ? "Doanh nghiệp của bạn" : user.Description,
                 JoinDate = user.CreatedDate ?? DateTime.Now,
-                TotalTickets = user.Tickets.Count,
+
+                // Demo stats (tuỳ bạn map theo dữ liệu thật)
+                TotalBookings = user.Tickets.Count,
                 AvgRating = user.Ratings.Any() ? user.Ratings.Average(r => r.Score) : 0,
-                RatingCount = user.Ratings.Count
+                RatingCount = user.Ratings.Count,
+                CompletionRate = 100,
+                Level = "Pro",
+                Achievements = new()
+                {
+                    ("🏆","Người du hành","Đặt hơn 100 vé du lịch")
+                }
             };
 
             return View(vm);
         }
 
-        // GET: /Customer/Profile/Edit
+        // GET: /Company/Profile/Edit
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
-            if (!TryGetUserId(out var userId)) return Unauthorized();
+            if (!TryGetCompanyId(out var companyId)) return Unauthorized();
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == companyId);
             if (user == null) return NotFound();
 
-            var vm = new CustomerProfileEditVm
+            var vm = new ProfileEditVm
             {
                 Id = user.Id,
                 FullName = user.UserName,
                 Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber,
-                Avatar = user.UserAvatar
+                Avatar = user.UserAvatar,
+                Description = user.Description,
+                ContactInfo = user.ContactInfo
             };
-
             return View(vm);
         }
 
-        // POST: /Customer/Profile/Edit
+        // POST: /Company/Profile/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(CustomerProfileEditVm vm)
+        public async Task<IActionResult> Edit(ProfileEditVm vm)
         {
-            if (!TryGetUserId(out var userId)) return Unauthorized();
-            if (vm.Id != userId) return BadRequest("Sai định danh người dùng.");
+            if (!TryGetCompanyId(out var companyId)) return Unauthorized();
+            if (companyId != vm.Id) return BadRequest("Sai định danh người dùng.");
             if (!ModelState.IsValid) return View(vm);
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == companyId);
             if (user == null) return NotFound();
 
-            // Upload avatar mới nếu có
+            // Nếu có file, upload lên Cloudinary
             if (vm.AvatarFile != null && vm.AvatarFile.Length > 0)
             {
                 var uploaded = await _uploader.UploadMediaAsync(vm.AvatarFile);
                 if (uploaded == "Unsupported file type")
                 {
-                    ModelState.AddModelError(nameof(vm.AvatarFile), "Định dạng file không hỗ trợ (jpg, png, gif, webp, ...).");
+                    ModelState.AddModelError(nameof(vm.AvatarFile), "Định dạng file không hỗ trợ (jpg, png, gif, webp...).");
                     return View(vm);
                 }
                 if (!string.IsNullOrWhiteSpace(uploaded))
                 {
-                    user.UserAvatar = uploaded; // lưu URL Cloudinary
-                    vm.Avatar = uploaded;       // giữ cho view hiển thị lại
+                    user.UserAvatar = uploaded;     // LƯU URL Cloudinary vào DB
+                    vm.Avatar = uploaded;           // để form giữ lại hiển thị khi ModelState lỗi
                 }
             }
             else
             {
-                // Không upload mới: giữ URL cũ (nếu có hidden field Avatar trong form)
+                // Không upload mới: giữ Avatar hiện tại từ input hidden/readonly (nếu bạn render)
                 if (!string.IsNullOrWhiteSpace(vm.Avatar))
                     user.UserAvatar = vm.Avatar;
             }
 
-            // Cập nhật thông tin cơ bản
+            // Cập nhật các trường khác
             user.UserName = vm.FullName;
             user.PhoneNumber = vm.PhoneNumber;
+            user.Description = vm.Description;
+            user.ContactInfo = vm.ContactInfo;
 
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
