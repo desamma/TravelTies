@@ -194,7 +194,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
                     }
                     else if (await _userManager.IsInRoleAsync(user, RoleConstants.User))
                     {
-                        returnUrl = Url.Action(nameof(Index), "User", new { area = "User" });
+                        returnUrl = Url.Action(nameof(Index), "Home", new { area = "Customer" });
 
                     }
                     else if (await _userManager.IsInRoleAsync(user, RoleConstants.Company))

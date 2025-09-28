@@ -1,0 +1,95 @@
+@model TravelTies.Areas.Customer.Models.TicketDetailsViewModel
+@{
+    ViewData["Title"] = "Chi tiết vé";
+    Func<decimal, string> FormatPrice = p => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", p);
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-4 shadow-lg">
+            <div class="card">
+                <div class="card-body flex gap-6">
+                    <div class="w-48 h-40 rounded-md overflow-hidden bg-gray-100">
+                        <img src="@(Model.TourPicture ?? Url.Content("~/images/banahill.png"))" class="w-full h-full object-cover" alt="@Model.TourName" />
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-black">@Model.TourName</h2>
+                        <div class="text-sm text-gray-700 mt-1">@Model.TourDestination</div>
+
+                        <div class="mt-4 grid grid-cols-2 gap-2 text-sm text-gray-700">
+                            <div>
+                                <div class="text-muted-foreground">Ngày Tour</div>
+                                <div class="font-medium">@Model.TourDate.ToString("dd/MM/yyyy")</div>
+                            </div>
+                            <div>
+                                <div class="text-muted-foreground">Số ghế</div>
+                                <div class="font-medium">@Model.NumberOfSeats</div>
+                            </div>
+                            <div>
+                                <div class="text-muted-foreground">Giá vé</div>
+                                <div class="font-medium">@FormatPrice(Model.TicketPrice)</div>
+                            </div>
+                            <div>
+                                <div class="text-muted-foreground">Trạng thái</div>
+                                <div class="font-medium">
+                                    @Html.Raw(Model.IsPayed
+                                        ? "<span class='badge badge-success'>Đã thanh toán</span>"
+                                        : "<span class='badge badge-warning'>Chưa thanh toán</span>")
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-muted-foreground">Mã đơn</div>
+                                <div class="font-medium">@Model.PaymentOrderCode</div>
+                            </div>
+                            <div>
+                                <div class="text-muted-foreground">Hạn huỷ miễn phí</div>
+                                <div class="font-medium">@Model.CancellationDateTime.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="font-semibold text-black">Thông tin chủ vé</h3>
+                    <div class="mt-2 text-sm text-gray-700">
+                        <div><strong>Họ & tên:</strong> @Model.OwnerName</div>
+                        <div><strong>Email:</strong> @Model.OwnerEmail</div>
+                        <div><strong>SĐT:</strong> @Model.OwnerPhone</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="font-semibold text-black">Ghi chú</h3>
+                    <p class="text-sm text-muted-foreground text-gray-700">Nếu vé đã được thanh toán, bạn có thể in vé / xem mã đơn dùng cho liên hệ hỗ trợ.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4 shadow-md hover:shadow-xl">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-sm text-muted-foreground text-black">Tổng</div>
+                    <div class="text-2xl font-bold mt-2 text-blue-500">@FormatPrice(Model.TicketPrice)</div>
+                    <div class="mt-4 flex flex-col gap-2">
+                        @if (!Model.IsPayed)
+                        {
+                            <a asp-area="Customer" asp-controller="Payment" asp-action="Start" asp-route-ticketIds="@Model.TicketId.ToString()" asp-route-amount="@Model.TicketPrice" class="btn btn-primary w-full">Thanh toán</a>
+                        }
+                        <a asp-action="MyTickets" class="btn btn-outline w-full bg-white text-gray-700">Quay lại vé của tôi</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="font-semibold text-black">Ghi chú hủy</h4>
+                    <div class="text-sm text-gray-700">Bạn có thể huỷ vé trước <strong>@Model.CancellationDateTime.ToString("dd/MM/yyyy HH:mm")</strong> để được hoàn (tuân theo chính sách)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

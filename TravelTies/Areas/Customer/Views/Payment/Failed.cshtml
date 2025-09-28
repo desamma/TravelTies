@@ -1,0 +1,46 @@
+@model TravelTies.Areas.Customer.Models.PaymentResultViewModel
+@{
+    ViewData["Title"] = "Thanh toán lỗi";
+    string FormatCurrency(int amount) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", amount);
+}
+
+<div class="min-h-screen bg-white py-24">
+  <div class="container mx-auto px-4 max-w-3xl">
+    <div class="card shadow-lg">
+      <div class="card-body text-center">
+        <div class="mb-4">
+          <div class="text-6xl">❌</div>
+        </div>
+        <h1 class="text-2xl font-bold mb-2 text-error">Thanh toán không thành công</h1>
+        <p class="text-gray-700 mb-4">@Model.Message ?? "Quá trình thanh toán gặp lỗi. Vui lòng thử lại." </p>
+
+        <div class="grid grid-cols-2 gap-4 text-left mb-4">
+          <div>
+            <div class="text-sm text-black">Mã đơn hàng</div>
+            <div class="font-medium text-gray-700">@Model.OrderCode</div>
+          </div>
+          <div>
+            <div class="text-sm text-black">Số tiền</div>
+            <div class="font-medium text-gray-700">@FormatCurrency(Model.Amount)</div>
+          </div>
+          <div>
+            <div class="text-sm text-black">Trạng thái</div>
+            <div class="font-medium text-error">@Model.Status</div>
+          </div>
+          <div>
+            <div class="text-sm text-black">Thời gian</div>
+            <div class="font-medium text-gray-700">@Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm")</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 justify-center mt-6">
+          <a asp-controller="Home" asp-action="Index" class="btn btn-outline bg-blue-600 text-white">Về trang chủ</a>
+          <a asp-controller="Payment" asp-action="CancelPaymentLink" asp-route-orderCode="@Model.OrderCode" class="btn btn-warning">Huỷ đơn</a>
+          <a asp-controller="Payment" asp-action="Success" asp-route-orderCode="@Model.OrderCode" class="btn btn-primary">Kiểm tra lại</a>
+        </div>
+
+        <p class="text-xs text-gray-700 mt-4">Nếu cần trợ giúp, hãy liên hệ bộ phận hỗ trợ và cung cấp mã đơn hàng.</p>
+      </div>
+    </div>
+  </div>
+</div>
