@@ -28,7 +28,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     {
         base.OnModelCreating(modelBuilder);
 
-        var companyId = Guid.Parse("31d326c6-4505-4f51-0d5e-08ddfdf51a6c");
+        /*var companyId = Guid.Parse("31d326c6-4505-4f51-0d5e-08ddfdf51a6c");
 
         modelBuilder.Entity<Tour>().HasData(
             new Tour
@@ -45,7 +45,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 Destination = "Hà Nội",
                 HotelStars = 4,
                 Price = 2500000,
-                Picture = "images/tours/hanoi.jpg",
+                Picture = "https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp",
                 Discount = 10m,
                 SupportTourMatching = true,
                 Commission = 5,
@@ -67,7 +67,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 Destination = "Hạ Long",
                 HotelStars = 3,
                 Price = 1800000,
-                Picture = "images/tours/halong.jpg",
+                Picture = "https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp",
                 Discount = 5m,
                 SupportTourMatching = true,
                 Commission = 4,
@@ -89,7 +89,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 Destination = "Hội An",
                 HotelStars = 3,
                 Price = 900000,
-                Picture = "images/tours/hoian.jpg",
+                Picture = "https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp",
                 Discount = 0m,
                 SupportTourMatching = true,
                 Commission = 3,
@@ -111,7 +111,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 Destination = "Sapa",
                 HotelStars = 4,
                 Price = 1500000,
-                Picture = "images/tours/sapa.jpg",
+                Picture = "https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp",
                 Discount = 15m,
                 SupportTourMatching = true,
                 Commission = 5,
@@ -133,7 +133,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 Destination = "Đà Lạt",
                 HotelStars = 3,
                 Price = 800000,
-                Picture = "images/tours/dalat.jpg",
+                Picture = "https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp",
                 Discount = 5m,
                 SupportTourMatching = true,
                 Commission = 4,
@@ -141,7 +141,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 ConversionRate = 0,
                 CompanyId = companyId
             }
-        );
+        );*/
         
         //Unique Constrains
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
