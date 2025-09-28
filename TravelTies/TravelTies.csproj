@@ -37,6 +37,7 @@
     <Folder Include="Areas\Admin\" />
     <Folder Include="Areas\Billing\" />
     <Folder Include="Areas\Chat\" />
+    <Folder Include="Areas\Customer\Views\Shared\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -73,5 +74,14 @@
     <AdditionalFiles Include="Views\_ViewImports.cshtml" />
     <AdditionalFiles Include="Views\_ViewStart.cshtml" />
   </ItemGroup>
+
+	<ItemGroup>
+		<UpToDateCheckBuilt Include="wwwroot/css/site.css" Set="Css" />
+		<UpToDateCheckBuilt Include="tailwind.config.js" Set="Css" />
+	</ItemGroup>
+
+	<Target Name="Tailwind" BeforeTargets="Build">
+		<Exec Command="npm run css:build" />
+	</Target>
 
 </Project>
