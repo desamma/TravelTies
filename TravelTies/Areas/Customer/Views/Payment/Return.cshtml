@@ -1,0 +1,58 @@
+@model TravelTies.Areas.Customer.Models.PaymentResultViewModel
+@{
+    ViewData["Title"] = "Thanh toán thành công";
+    string FormatCurrency(int amount) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", amount);
+}
+
+<div class="min-h-screen bg-white py-24">
+  <div class="container mx-auto px-4 max-w-3xl">
+    <div class="card shadow-lg">
+      <div class="card-body text-center">
+        <div class="mb-4">
+          <div class="text-6xl">✅</div>
+        </div>
+        <h1 class="text-2xl font-bold mb-2 text-black">Thanh toán thành công</h1>
+        <p class="mb-4 text-gray-700">Cảm ơn bạn đã đặt tour. Đơn hàng của bạn đã được xác nhận.</p>
+
+        <div class="grid grid-cols-2 gap-4 text-left mb-4">
+          <div>
+            <div class="text-sm text-black">Mã đơn hàng</div>
+            <div class="font-medium text-gray-700">@Model.OrderCode</div>
+          </div>
+          <div>
+            <div class="text-sm text-black">Số tiền</div>
+            <div class="font-medium text-gray-700">@FormatCurrency(Model.AmountPaid > 0 ? Model.AmountPaid : Model.Amount)</div>
+          </div>
+          <div>
+            <div class="text-sm text-black">Số vé</div>
+            <div class="font-medium text-gray-700">@Model.TicketsCount</div>
+          </div>
+          <div>
+            <div class="text-sm text-black">Trạng thái</div>
+            <div class="font-medium text-success">@Model.Status</div>
+          </div>
+        </div>
+
+        @if (Model.TransactionsSummary != null && Model.TransactionsSummary.Any())
+        {
+            <div class="mb-4 text-left">
+                <h4 class="font-semibold mb-2 text-black">Giao dịch</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700">
+                    @foreach(var tx in Model.TransactionsSummary)
+                    {
+                        <li>@tx</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="flex gap-3 justify-center mt-6">
+          <a asp-controller="Home" asp-action="Index" class="btn btn-outline bg-white text-black">Về trang chủ</a>
+          <a asp-controller="Booking" asp-action="MyTickets" class="btn btn-primary">Xem vé của tôi</a>
+        </div>
+
+        <p class="text-xs text-gray-700 mt-4">Nếu bạn cần hỗ trợ, vui lòng liên hệ chúng tôi qua email hoặc hotline.</p>
+      </div>
+    </div>
+  </div>
+</div>
