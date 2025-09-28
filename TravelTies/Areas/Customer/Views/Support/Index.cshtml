@@ -1,0 +1,366 @@
+﻿@{
+    ViewData["Title"] = "Trung tâm hỗ trợ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="bg-gradient-to-b from-blue-600 to-blue-700 text-white">
+    <div class="container mx-auto px-4 py-12">
+        <div class="text-center space-y-4 max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold">Trung tâm hỗ trợ</h1>
+            <p class="text-white/90">
+                Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7. Tìm câu trả lời nhanh chóng hoặc liên hệ trực tiếp.
+            </p>
+
+            <!-- Tìm kiếm -->
+            <div class="mt-6">
+                <form class="max-w-2xl mx-auto" onsubmit="return false;">
+                    <div class="relative">
+                        <input id="help-search"
+                               type="text"
+                               class="w-full rounded-xl py-3 pl-4 pr-12 text-slate-900 placeholder-slate-500"
+                               placeholder="Tìm kiếm câu hỏi thường gặp..."
+                               aria-label="Tìm kiếm câu hỏi thường gặp" />
+                        <button type="button" id="help-search-btn"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-white text-blue-700 text-sm font-medium">
+                            Tìm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Liên hệ hỗ trợ -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
+            <!-- Hotline -->
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/15">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-phone text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-semibold">Hotline 24/7</div>
+                        <div class="text-white/80 text-sm">Gọi ngay để được hỗ trợ tức thì</div>
+                    </div>
+                </div>
+                <a href="tel:19006420"
+                   class="mt-4 inline-flex items-center justify-center w-full rounded-xl bg-white text-blue-700 font-medium py-2 hover:bg-blue-50">
+                    1900 6420
+                </a>
+                <!-- Nút kéo xuống FAQ đặt tour -->
+                <button type="button"
+                        class="mt-3 w-full rounded-xl bg-white/20 border border-white/25 text-white py-2 hover:bg-white/25"
+                        data-scroll-to="#faq-1" data-open-faq="faq-1">
+                    Hỏi về đặt tour
+                </button>
+            </div>
+
+            <!-- Email -->
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/15">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fa-regular fa-envelope text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-semibold">Email hỗ trợ</div>
+                        <div class="text-white/80 text-sm">Gửi email cho chúng tôi</div>
+                    </div>
+                </div>
+                <a href="mailto:support@travelties.com"
+                   class="mt-4 inline-flex items-center justify-center w-full rounded-xl bg-white text-blue-700 font-medium py-2 hover:bg-blue-50">
+                    support@travelties.com
+                </a>
+                <button type="button"
+                        class="mt-3 w-full rounded-xl bg-white/20 border border-white/25 text-white py-2 hover:bg-white/25"
+                        data-scroll-to="#faq-3" data-open-faq="faq-3">
+                    Hỏi về thanh toán
+                </button>
+            </div>
+
+            <!-- Live Chat -->
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/15">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fa-regular fa-comments text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-lg font-semibold">Live Chat</div>
+                        <div class="text-white/80 text-sm">Trò chuyện trực tiếp với tư vấn viên</div>
+                    </div>
+                </div>
+                <a href="#chat"
+                   class="mt-4 inline-flex items-center justify-center w-full rounded-xl bg-white text-blue-700 font-medium py-2 hover:bg-blue-50">
+                    Chat ngay
+                </a>
+                <button type="button"
+                        class="mt-3 w-full rounded-xl bg-white/20 border border-white/25 text-white py-2 hover:bg-white/25"
+                        data-scroll-to="#faq">
+                    Xem câu hỏi thường gặp
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container mx-auto px-4 py-12" id="faq-root">
+    <h2 class="text-2xl md:text-3xl font-bold text-slate-900 text-center">Câu hỏi thường gặp</h2>
+
+    <!-- Tabs (lọc danh mục) -->
+    <div class="flex flex-wrap items-center justify-center gap-2 mt-6">
+        <button class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-medium"
+                data-scroll-to="#faq">
+            Tất cả
+        </button>
+        <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm"
+                data-scroll-to="#faq-1" data-open-faq="faq-1">
+            Đặt tour
+        </button>
+        <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm"
+                data-scroll-to="#faq-3" data-open-faq="faq-3">
+            Thanh toán
+        </button>
+        <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm"
+                data-scroll-to="#faq-4" data-open-faq="faq-4">
+            An toàn
+        </button>
+        <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm"
+                data-scroll-to="#faq-5" data-open-faq="faq-5">
+            Tour nhóm
+        </button>
+    </div>
+
+    <!-- FAQ Accordion -->
+    <div class="mt-8 max-w-3xl mx-auto space-y-3" id="faq" data-accordion-root>
+        <!-- Item 1 -->
+        <div class="border rounded-xl" id="faq-1-wrap">
+            <button type="button"
+                    class="w-full flex items-center justify-between text-left px-4 py-3 gap-3"
+                    data-accordion-trigger
+                    aria-expanded="false"
+                    aria-controls="faq-1"
+                    id="faq-1-button">
+                <span class="font-medium text-slate-900">
+                    Làm sao để đặt tour trên Travel Ties?
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-200" aria-hidden="true"></i>
+            </button>
+            <div id="faq-1" class="px-4 pb-3 hidden" role="region" aria-labelledby="faq-1-button">
+                <p class="text-slate-700" id="faq-1-text">
+                    <strong>Làm sao để đặt tour trên Travel Ties?</strong><br />
+                    Bạn có thể đặt tour bằng cách: 1) Tìm kiếm tour phù hợp, 2) Chọn ngày và số người,
+                    3) Điền thông tin cá nhân, 4) Thanh toán online hoặc chuyển khoản.
+                </p>
+            </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="border rounded-xl" id="faq-2-wrap">
+            <button type="button"
+                    class="w-full flex items-center justify-between text-left px-4 py-3 gap-3"
+                    data-accordion-trigger
+                    aria-expanded="false"
+                    aria-controls="faq-2"
+                    id="faq-2-button">
+                <span class="font-medium text-slate-900">
+                    Tôi có thể hủy tour sau khi đặt không?
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-200" aria-hidden="true"></i>
+            </button>
+            <div id="faq-2" class="px-4 pb-3 hidden" role="region" aria-labelledby="faq-2-button">
+                <p class="text-slate-700">
+                    Việc hủy/đổi tour phụ thuộc vào chính sách từng đại lý. Vui lòng xem chi tiết trong phần điều kiện
+                    hoặc liên hệ hỗ trợ để được hướng dẫn.
+                </p>
+            </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="border rounded-xl" id="faq-3-wrap">
+            <button type="button"
+                    class="w-full flex items-center justify-between text-left px-4 py-3 gap-3"
+                    data-accordion-trigger
+                    aria-expanded="false"
+                    aria-controls="faq-3"
+                    id="faq-3-button">
+                <span class="font-medium text-slate-900">
+                    Travel Ties hỗ trợ những hình thức thanh toán nào?
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-200" aria-hidden="true"></i>
+            </button>
+            <div id="faq-3" class="px-4 pb-3 hidden" role="region" aria-labelledby="faq-3-button">
+                <p class="text-slate-700">
+                    Chúng tôi hỗ trợ thanh toán trực tuyến (thẻ, ví điện tử) và chuyển khoản ngân hàng. Một số đại lý có thể nhận tiền mặt khi khởi hành.
+                </p>
+            </div>
+        </div>
+
+        <!-- Item 4 -->
+        <div class="border rounded-xl" id="faq-4-wrap">
+            <button type="button"
+                    class="w-full flex items-center justify-between text-left px-4 py-3 gap-3"
+                    data-accordion-trigger
+                    aria-expanded="false"
+                    aria-controls="faq-4"
+                    id="faq-4-button">
+                <span class="font-medium text-slate-900">
+                    Tôi có an toàn khi thanh toán online không?
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-200" aria-hidden="true"></i>
+            </button>
+            <div id="faq-4" class="px-4 pb-3 hidden" role="region" aria-labelledby="faq-4-button">
+                <p class="text-slate-700">
+                    Travel Ties sử dụng các cổng thanh toán đạt chuẩn bảo mật PCI-DSS, mã hóa TLS và xác thực nhiều lớp để bảo vệ giao dịch của bạn.
+                </p>
+            </div>
+        </div>
+
+        <!-- Item 5 -->
+        <div class="border rounded-xl" id="faq-5-wrap">
+            <button type="button"
+                    class="w-full flex items-center justify-between text-left px-4 py-3 gap-3"
+                    data-accordion-trigger
+                    aria-expanded="false"
+                    aria-controls="faq-5"
+                    id="faq-5-button">
+                <span class="font-medium text-slate-900">
+                    Tôi muốn đặt tour cho nhóm đông người thì làm thế nào?
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-200" aria-hidden="true"></i>
+            </button>
+            <div id="faq-5" class="px-4 pb-3 hidden" role="region" aria-labelledby="faq-5-button">
+                <p class="text-slate-700">
+                    Vui lòng liên hệ Live Chat hoặc email để được tư vấn lịch trình, giá ưu đãi và điều chỉnh theo nhu cầu nhóm của bạn.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+          const root = document.querySelector('[data-accordion-root]');
+          if (!root) return;
+
+          /** Smooth scroll with offset (nếu có header cố định, chỉnh offsetPx) */
+          const smoothScrollTo = (target, {openFaqId=null, offsetPx=10} = {}) => {
+            const el = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const y = window.scrollY + rect.top - offsetPx;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+            if (openFaqId) {
+              // Trễ nhẹ để đảm bảo scroll xong rồi mới mở
+              setTimeout(() => openFaq(openFaqId, {scroll:false}), 200);
+            }
+          };
+
+          /** Đóng tất cả item */
+          const closeAll = () => {
+            root.querySelectorAll('[data-accordion-trigger]').forEach((b) => {
+              const id = b.getAttribute('aria-controls');
+              const p = id ? document.getElementById(id) : null;
+              if (!p) return;
+              b.setAttribute('aria-expanded', 'false');
+              p.classList.add('hidden');
+              const icon = b.querySelector('.fa-chevron-down');
+              if (icon) icon.classList.remove('rotate-180');
+            });
+          };
+
+          /** Mở một mục theo id (vd: faq-1) */
+          const openFaq = (faqId, {scroll=true} = {}) => {
+            const btn = document.querySelector(`#${faqId}-button`);
+            const panel = document.getElementById(faqId);
+            if (!btn || !panel) return;
+
+            // đóng các mục khác
+            closeAll();
+
+            // mở mục này
+            btn.setAttribute('aria-expanded', 'true');
+            panel.classList.remove('hidden');
+            const icon = btn.querySelector('.fa-chevron-down');
+            if (icon) icon.classList.add('rotate-180');
+
+            if (scroll) {
+              // scroll tới khối bọc để thấy tiêu đề câu hỏi
+              const wrap = document.getElementById(`${faqId}-wrap`) || panel;
+              smoothScrollTo(wrap, {offsetPx:12});
+            }
+          };
+
+          /** Toggle theo click trong accordion */
+          root.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-accordion-trigger]');
+            if (!btn) return;
+
+            const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+            const panelId = btn.getAttribute('aria-controls');
+
+            if (!panelId) return;
+
+            if (isExpanded) {
+              // đang mở -> đóng lại
+              btn.setAttribute('aria-expanded', 'false');
+              const p = document.getElementById(panelId);
+              if (p) p.classList.add('hidden');
+              const icon = btn.querySelector('.fa-chevron-down');
+              if (icon) icon.classList.remove('rotate-180');
+            } else {
+              openFaq(panelId);
+            }
+          });
+
+          /** Điều hướng: mọi element có data-scroll-to sẽ kéo xuống & có thể mở FAQ */
+          const handleNavClick = (e) => {
+            const t = e.currentTarget;
+            const to = t.getAttribute('data-scroll-to');
+            const openId = t.getAttribute('data-open-faq');
+            if (!to) return;
+            e.preventDefault();
+            if (openId) {
+              // Scroll đến vùng đích (thường là #faq-<n> hoặc #faq) rồi mở mục
+              smoothScrollTo(to, {openFaqId: openId, offsetPx:12});
+            } else {
+              smoothScrollTo(to, {offsetPx:12});
+            }
+          };
+
+          document.querySelectorAll('[data-scroll-to]').forEach(el => {
+            el.addEventListener('click', handleNavClick);
+          });
+
+          /** Hỗ trợ mở qua URL hash (#faq-3, #faq-1...) */
+          const openFromHash = () => {
+            const hash = window.location.hash.replace('#','');
+            if (!hash) return;
+            // Nếu hash là "faq-3" thì mở mục tương ứng; nếu là "faq" thì chỉ scroll tới khu vực
+            if (hash.startsWith('faq-')) {
+              openFaq(hash);
+            } else if (hash === 'faq') {
+              const el = document.getElementById('faq-root') || document.getElementById('faq');
+              if (el) smoothScrollTo(el, {offsetPx:12});
+            }
+          };
+          openFromHash();
+
+          /** Tìm kiếm rất đơn giản: cuộn đến câu đầu tiên khớp từ khóa và mở nó */
+          const doSearch = () => {
+            const q = (document.getElementById('help-search')?.value || '').trim().toLowerCase();
+            if (!q) return;
+            const items = Array.from(root.querySelectorAll('[id^="faq-"][id$="-button"]'));
+            const found = items.find(b => b.textContent.toLowerCase().includes(q));
+            if (found) {
+              const id = found.getAttribute('aria-controls');
+              if (id) openFaq(id);
+            } else {
+              // tìm trong phần nội dung
+              const panels = Array.from(root.querySelectorAll('[id^="faq-"]:not([id$="-wrap"]):not([id$="-button"])'));
+              const f2 = panels.find(p => p.textContent.toLowerCase().includes(q));
+              if (f2) openFaq(f2.id);
+            }
+          };
+          document.getElementById('help-search-btn')?.addEventListener('click', doSearch);
+        })();
+    </script>
+}
