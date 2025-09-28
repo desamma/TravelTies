@@ -26,7 +26,7 @@ builder.Services.AddSignalR(options =>
 });
 
 // Cloudinary
-//todo:builder.Services.AddSingleton<CloudinaryUploader>();
+builder.Services.AddSingleton<CloudinaryUploader>();
 
 // Add database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

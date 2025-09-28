@@ -1,8 +1,8 @@
 @using Microsoft.AspNetCore.Identity
 @using Models.Models
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<User> SignInManager
 @inject IHttpContextAccessor Accessor
-@inject UserManager<IdentityUser> UserManager
+@inject UserManager<User> UserManager
 @{
     var userString = Accessor.HttpContext.Session.GetString("CurrentUser");
     User currentUser = null;
@@ -31,7 +31,7 @@
             <a href="/" class="flex items-center text-sm font-medium text-blue-600 hover:text-green-500">
                 <i class="fas fa-home mr-1"></i> Trang chủ
             </a>
-            <a href="/tours" class="text-sm font-medium text-gray-700 hover:text-green-500">Tours</a>
+            <a asp-area="Customer" asp-action="Index" asp-controller="Tour" class="text-sm font-medium text-gray-700 hover:text-green-500">Tours</a>
             <a href="/offers" class="text-sm font-medium text-gray-700 hover:text-green-500">Ưu đãi</a>
             <a href="/featured" class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
                 <i class="far fa-star mr-1"></i> Nổi bật
@@ -53,7 +53,7 @@
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                         <div class="w-10 rounded-full">
-                            <img src="@(currentUser?.UserAvatar ?? "/images/default-avatar.png")" alt="@currentUser?.UserName" />
+                            <img src="@(currentUser?.UserAvatar ?? @Url.Content("images/default-avatar.png"))" alt="@currentUser?.UserName" />
                         </div>
                     </div>
                     <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
