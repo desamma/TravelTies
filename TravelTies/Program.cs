@@ -7,14 +7,24 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
+using Net.payOS;
 using Utilities.Utils;
 
 DotNetEnv.Env.Load();
+
+// Import payOS
+IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+PayOS payOS = new PayOS(configuration["PayOS:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find environment"),
+    configuration["PayOS:PAYOS_API_KEY"] ?? throw new Exception("Cannot find environment"),
+    configuration["PayOS:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find environment"));
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Add payOS service
+builder.Services.AddSingleton(payOS);
 
 //SignalR
 builder.Services.AddSignalR(options =>
@@ -79,6 +89,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Enable razor page
 builder.Services.AddRazorPages();
+builder.Services.AddMvc();
 
 // Session
 builder.Services.AddDistributedMemoryCache();

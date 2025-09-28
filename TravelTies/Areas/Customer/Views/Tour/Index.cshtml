@@ -28,7 +28,8 @@
             <!-- Search -->
             <div>
                 <label class="text-sm font-medium text-black">Tìm kiếm</label>
-                <input type="text" name="search" value="@ViewBag.Search" class="input input-bordered w-full mt-1 bg-white text-black" placeholder="Tên tour hoặc địa điểm..."/>
+                <input type="text" name="search" value="@ViewBag.Search" class="input input-bordered w-full mt-1 bg-white text-black"
+                       placeholder="Tên tour hoặc địa điểm..."/>
             </div>
 
             <!-- Category -->
@@ -54,17 +55,17 @@
             <div>
                 <label class="text-sm font-medium text-black">Khoảng giá</label>
                 <div class="flex gap-2 mt-1">
-                    <input type="number" name="minPrice" 
-                           value="@ViewBag.MinPrice" 
-                           placeholder="Giá thấp nhất" 
+                    <input type="number" name="minPrice"
+                           value="@ViewBag.MinPrice"
+                           placeholder="Giá thấp nhất"
                            min="0"
-                           class="input input-bordered w-full bg-white text-black" />
+                           class="input input-bordered w-full bg-white text-black"/>
 
-                    <input type="number" name="maxPrice" 
-                           value="@ViewBag.MaxPrice" 
-                           placeholder="Giá cao nhất" 
+                    <input type="number" name="maxPrice"
+                           value="@ViewBag.MaxPrice"
+                           placeholder="Giá cao nhất"
                            min="0"
-                           class="input input-bordered w-full bg-white text-black" />
+                           class="input input-bordered w-full bg-white text-black"/>
                 </div>
             </div>
 
@@ -78,7 +79,9 @@
                 var discount = tour.Discount > 0 ? Math.Round((double)tour.Discount) : 0;
                 <div class="card bg-white shadow hover:shadow-lg cursor-pointer">
                     <figure class="relative">
-                        <img src="@tour.Picture" ?? @Url.Content("/images/banahill.png") class="h-48 w-full object-cover" />
+                        <img
+                            src=@(Url.Content(tour.Picture) ?? Url.Content("https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp"))
+                            class="h-48 w-full object-cover"/>
                         @if (!string.IsNullOrEmpty(tour.Category))
                         {
                             <div class="absolute top-2 left-2 badge badge-secondary">@tour.Category</div>
@@ -96,7 +99,8 @@
                             <span class="font-bold text-blue-700">@tour.Price.ToString("C0", CultureInfo.GetCultureInfo("vi-VN"))</span>
                         </div>
                         <div class="card-actions mt-4">
-                            <a href="@Url.Action("Detail", "Tour", new { id = tour.TourId })" class="btn btn-outline btn-sm w-full bg-white text-black">
+                            <a href="@Url.Action("Detail", "Tour", new { id = tour.TourId })"
+                               class="btn btn-outline btn-sm w-full bg-white text-black">
                                 Xem chi tiết
                             </a>
                         </div>

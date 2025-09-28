@@ -61,6 +61,6 @@ public class AuthController : Controller
         HttpContext.Session.Clear(); // Clear the session
         await _signInManager.SignOutAsync();
 
-        return RedirectToAction(nameof(Index), "Home",new { area = "User" });
+        return RedirectToAction(nameof(Index), "Home",new { area = "Customer" });
     }
 }
