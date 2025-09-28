@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -199,7 +199,9 @@ namespace TravelTies.Areas.Identity.Pages.Account
                     }
                     else if (await _userManager.IsInRoleAsync(user, RoleConstants.Company))
                     {
-                        returnUrl = Url.Action(nameof(Index), "Company", new { area = "Company" });
+                        // Controller đúng là Home trong Area Company
+                        returnUrl = Url.Action("Index", "Home", new { area = "Company" })
+                                    ?? "/Company/Home/Index";
                     }
                     return LocalRedirect(returnUrl);
                 }

@@ -1,0 +1,124 @@
+﻿@model TravelTies.Areas.Company.ViewModels.ProfileVm
+@{
+    ViewData["Title"] = "Hồ sơ Đại lý";
+    var avatar = Model.Avatar ?? Url.Content("~/images/default-avatar.png");
+}
+<section class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold">Hồ sơ Đại lý</h1>
+            <p class="text-sm text-slate-500">Quản lý thông tin cá nhân và business của bạn</p>
+        </div>
+        <a asp-action="Edit"
+           class="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border bg-white hover:bg-slate-50">
+            <i class="fa-regular fa-pen-to-square"></i> Chỉnh sửa
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Card trái -->
+        <div class="bg-white border rounded-2xl p-6">
+            <div class="flex flex-col items-center">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center">
+                    @if (!string.IsNullOrWhiteSpace(Model.Avatar))
+                    {
+                        <img src="@avatar" alt="@Model.FullName" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        <span class="text-xl font-semibold">@Model.FullName.Substring(0, 1)</span>
+                    }
+                </div>
+
+                <div class="mt-4 text-center">
+                    <div class="text-lg font-semibold">@Model.FullName</div>
+                    <div class="text-sm text-slate-500">@Model.AgencyName</div>
+                    <div class="flex items-center justify-center gap-1 text-sm text-amber-600 mt-1">
+                        <span>★</span> <span class="font-medium">@Model.AvgRating.ToString("0.0")</span>
+                        <span class="text-slate-400">(@Model.RatingCount đánh giá)</span>
+                    </div>
+                </div>
+
+                <div class="w-full mt-5">
+                    <div class="flex items-center justify-between text-xs text-slate-500">
+                        <span>Tỷ lệ hoàn thành</span><span>@Model.CompletionRate%</span>
+                    </div>
+                    <div class="mt-1 h-2 rounded bg-slate-100">
+                        <div class="h-2 rounded bg-indigo-600" style="width:@Model.CompletionRate%"></div>
+                    </div>
+                </div>
+
+                <div class="w-full mt-6 space-y-2 text-sm">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-slate-600">
+                            <i class="fa-regular fa-calendar"></i> <span>Ngày tham gia</span>
+                        </div>
+                        <div>@Model.JoinDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-slate-600">
+                            <i class="fa-regular fa-ticket"></i> <span>Tổng booking</span>
+                        </div>
+                        <div>@Model.TotalBookings</div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-slate-600">
+                            <i class="fa-regular fa-circle-check"></i> <span>Cấp độ</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700 border">
+                            @Model.Level
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pane phải -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white border rounded-2xl">
+                <div class="flex items-center text-sm">
+                    <button class="flex-1 py-3 border-b-2 border-indigo-600 font-medium">Cá nhân</button>
+                    <button class="flex-1 py-3 text-slate-500 border-b">Doanh nghiệp</button>
+                    <button class="flex-1 py-3 text-slate-500 border-b">Cài đặt</button>
+                    <button class="flex-1 py-3 text-slate-500 border-b">Bảo mật</button>
+                </div>
+
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <div class="text-slate-500">Họ và tên</div>
+                        <div class="font-medium mt-1">@Model.FullName</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Email</div>
+                        <div class="font-medium mt-1">@Model.Email</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Số điện thoại</div>
+                        <div class="font-medium mt-1">@Model.PhoneNumber</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Địa chỉ</div>
+                        <div class="font-medium mt-1">@Model.Address</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thành tích -->
+            <div class="bg-white border rounded-2xl p-6">
+                <div class="font-medium mb-4">Thành tích</div>
+                <div class="space-y-3 text-sm">
+                    @foreach (var a in Model.Achievements)
+                    {
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">@a.icon</div>
+                            <div>
+                                <div class="font-medium">@a.title</div>
+                                <div class="text-slate-500 text-xs">@a.desc</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
