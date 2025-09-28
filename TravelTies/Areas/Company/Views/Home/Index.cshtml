@@ -1,0 +1,107 @@
+﻿@model TravelTies.Areas.Company.ViewModels.DashboardVm
+@{
+    ViewData["Title"] = "Tổng quan";
+    var conversion = (double)(ViewBag.ConversionRate ?? 0d);
+}
+<section class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold">Chào mừng trở lại! <span>👋</span></h1>
+            <p class="text-sm text-gray-500 mt-1">Tổng quan hoạt động kinh doanh tour của bạn trong tuần này</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="rounded-2xl p-5 bg-white border"><div class="text-sm text-gray-500 mb-2">Tour đang hoạt động</div><div class="text-3xl font-bold">@Model.ActiveTours</div><div class="text-xs text-gray-400 mt-1">+2 tuần này</div></div>
+        <div class="rounded-2xl p-5 bg-white border"><div class="text-sm text-gray-500 mb-2">Tổng booking</div><div class="text-3xl font-bold">@Model.TotalBookings</div><div class="text-xs text-gray-400 mt-1">+15 tuần này</div></div>
+        <div class="rounded-2xl p-5 bg-white border"><div class="text-sm text-gray-500 mb-2">Doanh thu tháng</div><div class="text-3xl font-bold">@Model.MonthlyRevenue.ToString("N0") VND</div><div class="text-xs text-gray-400 mt-1">+12% so với tháng trước</div></div>
+        <div class="rounded-2xl p-5 bg-white border"><div class="text-sm text-gray-500 mb-2">Tỷ lệ chuyển đổi</div><div class="text-3xl font-bold">@conversion.ToString("0.##")%</div><div class="text-xs text-gray-400 mt-1">+3% tuần này</div></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 rounded-2xl bg-white border">
+            <div class="p-5 border-b">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-semibold">Tour gần đây</div>
+                        <div class="text-xs text-gray-500 mt-1">Danh sách tour đang hoạt động của bạn</div>
+                    </div>
+                    <a asp-area="Company" asp-controller="Tours" asp-action="Index" class="text-sm text-indigo-600 hover:underline">Xem tất cả</a>
+                </div>
+            </div>
+            <div class="p-5 space-y-4">
+                @if (Model.RecentTours.Any())
+                {
+                    @foreach (var t in Model.RecentTours)
+                    {
+                        var percent = t.Capacity > 0 ? (int)Math.Round((double)t.CurrentTickets / t.Capacity * 100d) : 0;
+                        <div class="rounded-xl border p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="font-medium">@t.TourName</div>
+                                <span class="text-xs rounded-full px-2 py-0.5 border @(t.Status.Contains("động") ? "text-green-600 border-green-200 bg-green-50" : "text-orange-600 border-orange-200 bg-orange-50")">
+                                    @t.Status
+                                </span>
+                            </div>
+                            <div class="mt-2 grid grid-cols-3 gap-4 text-sm text-gray-500">
+                                <div class="flex items-center space-x-2"><span>👥</span><span>@t.CurrentTickets/@t.Capacity người</span></div>
+                                <div class="flex items-center space-x-2"><span>💵</span><span>@t.Price.ToString("N0")</span></div>
+                                <div class="flex items-center space-x-2"><span>👁️</span><span>@percent% công suất</span></div>
+                            </div>
+                            <div class="mt-3 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-2 bg-indigo-600 rounded-full" style="width:@percent%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-sm text-gray-500">Chưa có tour nào.</div>
+                }
+            </div>
+        </div>
+
+        <div class="rounded-2xl bg-white border">
+            <div class="p-5 border-b">
+                <div class="font-semibold">Hoạt động gần đây</div>
+                <div class="text-xs text-gray-500 mt-1">Cập nhật mới nhất về tour và booking</div>
+            </div>
+            <div class="p-5 space-y-4">
+                @if (Model.RecentActivities.Any())
+                {
+                    @foreach (var a in Model.RecentActivities)
+                    {
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 rounded-full bg-indigo-600 mt-2"></div>
+                            <div class="text-sm">@a</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-sm text-gray-500">Chưa có hoạt động nào.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-2xl bg-white border">
+        <div class="p-5 border-b">
+            <div class="font-semibold">Hành động nhanh</div>
+            <div class="text-xs text-gray-500 mt-1">Những việc bạn có thể làm ngay</div>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a asp-area="Company" asp-controller="Tours" asp-action="Create" class="rounded-xl border p-6 hover:bg-gray-50 text-center">
+                <div class="text-2xl">➕</div><div class="mt-2 font-medium">Tạo tour mới</div>
+            </a>
+            <a asp-area="Company" asp-controller="Booking" asp-action="Index" class="rounded-xl border p-6 hover:bg-gray-50 text-center">
+                <div class="text-2xl">👥</div><div class="mt-2 font-medium">Quản lý booking</div>
+            </a>
+            <a asp-area="Company" asp-controller="Analytics" asp-action="Index" class="rounded-2xl border p-6 hover:bg-gray-50 text-center">
+                <div class="text-2xl">📊</div><div class="mt-2 font-medium">Xem thống kê</div>
+            </a>
+            <a asp-area="Company" asp-controller="Profile" asp-action="Index" class="rounded-xl border p-6 hover:bg-gray-50 text-center">
+                <div class="text-2xl">💬</div><div class="mt-2 font-medium">Tin nhắn</div>
+            </a>
+        </div>
+    </div>
+</section>

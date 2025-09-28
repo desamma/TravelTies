@@ -1,0 +1,117 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Models.Models
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+@inject IHttpContextAccessor Accessor
+
+@{
+    // Lấy user đã cache trong Session (nếu bạn đang set ở login)
+    var userString = Accessor?.HttpContext?.Session?.GetString("CurrentUser");
+    User? currentUser = null;
+    if (!string.IsNullOrEmpty(userString))
+    {
+        try { currentUser = System.Text.Json.JsonSerializer.Deserialize<User>(userString); }
+        catch { currentUser = null; }
+    }
+
+    var avatar = currentUser?.UserAvatar;
+    if (string.IsNullOrWhiteSpace(avatar))
+    {
+        // Đường dẫn ảnh mặc định (đổi lại nếu bạn để nơi khác)
+        avatar = Url.Content("~/images/default-avatar.png");
+    }
+
+    var isSignedIn = SignInManager.IsSignedIn(User);
+    var isCompany = User.IsInRole("company");
+}
+
+<nav class="bg-white border-b border-gray-200 fixed w-full top-0 z-50">
+    <div class="container mx-auto flex items-center justify-between px-6 py-3">
+        <!-- Logo -->
+        <a asp-area="Company" asp-controller="Home" asp-action="Index" class="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-green-500" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z" />
+                <circle cx="12" cy="9" r="2.5" fill="currentColor" />
+            </svg>
+            <span class="text-xl font-bold text-blue-600">Travel</span>
+            <span class="text-xl font-bold text-green-500">Ties</span>
+            <span class="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">Agent</span>
+        </a>
+
+        <!-- Menu (giữ style như mẫu, đổi link sang Area=Company) -->
+        <div class="hidden md:flex items-center space-x-6">
+            <a asp-area="Company" asp-controller="Home" asp-action="Index"
+               class="flex items-center text-sm font-medium text-blue-600 hover:text-green-500">
+                <i class="fas fa-home mr-1"></i> Tổng quan
+            </a>
+            <a asp-area="Company" asp-controller="Tours" asp-action="Index"
+               class="text-sm font-medium text-gray-700 hover:text-green-500">Tour</a>
+            <a asp-area="Company" asp-controller="Tours" asp-action="Create"
+               class="text-sm font-medium text-gray-700 hover:text-green-500">Tạo mới</a>
+            <a asp-area="Company" asp-controller="Analytics" asp-action="Index"
+               class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
+                <i class="far fa-star mr-1"></i> Thống kê
+            </a>
+            <a asp-area="Company" asp-controller="Booking" asp-action="Index"
+               class="text-sm font-medium text-gray-700 hover:text-green-500">Booking</a>
+            <a asp-area="Company" asp-controller="Profile" asp-action="Index"
+               class="text-sm font-medium text-gray-700 hover:text-green-500">Hồ sơ</a>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center space-x-4">
+            <!-- Language -->
+            <button class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
+                <i class="fas fa-globe mr-1"></i> VN
+            </button>
+
+            @if (isSignedIn)
+            {
+                <div class="dropdown dropdown-end">
+                    <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                        <div class="w-10 rounded-full overflow-hidden">
+                            <img src="@avatar" alt="@(currentUser?.UserName ?? User.Identity?.Name ?? "user")" />
+                        </div>
+                    </div>
+                    <ul tabindex="0"
+                        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-56">
+                        <li class="menu-title flex items-center gap-2">
+                            <span>@(currentUser?.UserName ?? User.Identity?.Name ?? "User")</span>
+                            @if (isCompany)
+                            {
+                                <span class="badge badge-primary badge-sm">Company</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning badge-sm">User</span>
+                            }
+                        </li>
+
+                        @if (isCompany)
+                        {
+                            <li><a asp-area="Company" asp-controller="Home" asp-action="Index">Đại lý của bạn</a></li>
+                            <li><a asp-area="Company" asp-controller="Profile" asp-action="Index">Hồ sơ đại lý</a></li>
+                            <li><a asp-area="Company" asp-controller="Tours" asp-action="Index">Quản lý tour</a></li>
+                        }
+                        else
+                        {
+                            <li><a asp-area="Customer" asp-controller="Customer" asp-action="Index">Hồ sơ của bạn</a></li>
+                            <li><a asp-area="Customer" asp-controller="Ticket" asp-action="Index">Vé của bạn</a></li>
+                        }
+
+                        <li><a asp-area="Identity" asp-controller="Auth" asp-action="Logout">Đăng xuất</a></li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a asp-area="Identity" asp-page="/Account/Login"
+                   class="px-4 py-1.5 border border-gray-300 text-sm font-medium text-gray-700 rounded-md flex items-center hover:bg-gray-100 transition">
+                    <i class="fas fa-user mr-1"></i> Đăng nhập
+                </a>
+            }
+        </div>
+    </div>
+</nav>
