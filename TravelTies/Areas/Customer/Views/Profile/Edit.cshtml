@@ -1,4 +1,4 @@
-﻿@model TravelTies.Areas.Company.ViewModels.ProfileEditVm
+﻿@model TravelTies.Areas.Customer.Models.ProfileEditVm
 @{
     ViewData["Title"] = "Chỉnh sửa hồ sơ";
 }
@@ -20,11 +20,11 @@
                 <span asp-validation-for="FullName" class="text-sm text-red-600"></span>
             </div>
 
-            <div>
+            @* <div>
                 <label class="text-sm text-slate-600">Tên doanh nghiệp</label>
                 <input asp-for="Description" class="mt-1 w-full px-3 py-2 border rounded-lg" />
                 <span asp-validation-for="Description" class="text-sm text-red-600"></span>
-            </div>
+            </div> *@
 
             <!-- Avatar Preview -->
             <div>
