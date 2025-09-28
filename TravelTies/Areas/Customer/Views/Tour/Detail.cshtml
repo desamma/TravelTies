@@ -1,0 +1,339 @@
+@model TravelTies.Areas.Customer.Models.TourDetailViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = Model.Tour.TourName;
+    string FormatPrice(decimal p) => string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", p);
+    string FormatDateOnly(DateOnly d) => d.ToString("dd/MM/yyyy");
+    var imageUrls = (Model.Tour.Picture ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+}
+
+<section class="bg-muted/30 py-4">
+    <div class="container mx-auto px-4 text-sm text-muted-foreground">
+        <a asp-controller="Home" asp-action="Index" class="text-black hover:text-primary">Trang chủ</a>
+        <span class="mx-2 text-black">/</span>
+        <a asp-controller="Tour" asp-action="Index" class="text-black hover:text-primary">Tours</a>
+        <span class="mx-2 text-black">/</span>
+        <span class="font-medium text-black">@Model.Tour.TourName</span>
+    </div>
+</section>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left: Main content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Gallery -->
+            <div class="relative rounded-2xl overflow-hidden h-96 w-full">
+                @if (imageUrls.Length > 0)
+                {
+                    <div class="carousel h-full w-full">
+                        @for (int i = 0; i < imageUrls.Length; i++)
+                        {
+                            <div id="slide@i" class="carousel-item relative h-full w-full flex justify-center items-center">
+                                <!-- Blurred background -->
+                                <div class="absolute inset-0">
+                                    <img src="@imageUrls[i]" class="w-full h-full object-cover filter blur-xl scale-110" />
+                                </div>
+                    
+                                <!-- Centered main image -->
+                                <img src="@imageUrls[i]" class="relative max-w-full max-h-full object-contain rounded-2xl" />
+                    
+                                <!-- Navigation buttons -->
+                                <div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
+                                    <a href="#slide@(i == 0 ? imageUrls.Length - 1 : i - 1)" class="btn btn-circle">❮</a>
+                                    <a href="#slide@((i + 1) % imageUrls.Length)" class="btn btn-circle">❯</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="w-full h-full relative">
+                        <img src="~/images/banahill.png" class="absolute inset-0 w-full h-full object-cover filter blur-xl scale-110" />
+                        <img src="~/images/banahill.png" class="relative w-full h-full object-contain rounded-2xl" />
+                    </div>
+                }
+            </div>
+            
+            <!-- Title & Meta -->
+            <div class="space-y-4">
+                <div class="flex items-start justify-between">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge badge-secondary">@Model.Tour.Category</span>
+                            @*<span class="badge badge-outline text-yellow-300">@Model.Tour.HotelStars</span>*@
+                        </div>
+                        <h1 class="text-3xl font-bold text-black">@Model.Tour.TourName</h1>
+                        <div class="flex items-center gap-6 text-muted-foreground text-gray-700">
+                            <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt"></i> <span>@Model.Tour.Destination</span></div>
+                            <div class="flex items-center gap-2"><i class="fas fa-clock"></i> <span>@(Model.Tour.TourStartDate.ToString("dd/MM/yyyy"))</span></div>
+                        </div>
+
+                        <div class="flex items-center gap-3 mt-2">
+                            <div class="flex items-center">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= Math.Floor(Model.AverageRating))
+                                    {
+                                        <svg class="w-4 h-4 fill-yellow-500 text-yellow-500"><use href="#star-solid"/></svg>
+                                    }
+                                    else
+                                    {
+                                        <svg class="w-4 h-4 text-gray-700"><use href="#star-outline"/></svg>
+                                    }
+                                }
+                            </div>
+                            <div class="font-medium text-black">@Model.AverageRating</div>
+                            <div class="text-sm text-muted-foreground text-gray-700">(@Model.ReviewsCount đánh giá)</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <a class="btn btn-ghost btn-sm" title="Yêu thích"><i class="far fa-heart"></i></a>
+                        <a class="btn btn-ghost btn-sm" title="Chia sẻ"><i class="fas fa-share-alt"></i></a>
+                    </div>
+                </div>
+
+                <p class="text-muted-foreground leading-relaxed text-black">@Model.Tour.Description</p>
+            </div>
+
+            <!-- Tabs -->
+            @*<div class="tabs tabs-boxed">
+                <a class="tab tab-active text-black">Điểm nổi bật</a>
+                <a class="tab text-black">Lịch trình</a>
+                <a class="tab text-black">Bao gồm</a>
+                <a class="tab text-black">Đánh giá (@Model.ReviewsCount)</a>
+            </div>*@
+
+            <!-- Highlights -->
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-lg font-semibold mb-3 text-black">Những trải nghiệm đặc biệt</h3>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        @{
+                            foreach (var hi in Model.Tour.About?.Split('\n') ?? Array.Empty<string>())
+                            {
+                                if (!string.IsNullOrWhiteSpace(hi)) { <li>@hi</li>; }
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Itinerary -->
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-lg font-semibold mb-3 text-black">Lịch trình</h3>
+                    @* If you store a schedule list elsewhere, render it. Here we fallback to TourScheduleDescription *@
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        @{
+                            foreach (var hi in Model.Tour.TourScheduleDescription?.Split(',') ?? Array.Empty<string>())
+                            {
+                                if (!string.IsNullOrWhiteSpace(hi)) { <li>@hi</li>; }
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Policies -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="font-semibold mb-2 text-black">Bao gồm</h4>
+                        <ul class="list-disc list-inside text-sm text-green-700">
+                            <li><i class="fa-solid fa-check"></i> Xe vận chuyển đời mới</li>
+                            <li><i class="fa-solid fa-check"></i> Hướng dẫn viên</li>
+                            <li><i class="fa-solid fa-check"></i> Vé tham quan theo chương trình</li>
+                            @* Replace with actual list when available *@
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="font-semibold mb-2 text-black">Không bao gồm</h4>
+                        <ul class="list-disc list-inside text-sm text-red-600">
+                            <li><i class="fa-solid fa-xmark"></i> Chi phí cá nhân</li>
+                            <li><i class="fa-solid fa-xmark"></i> Đồ uống có cồn</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews -->
+            <div class="space-y-4">
+                <h3 class="text-2xl font-bold text-black">Đánh giá từ khách hàng( @Model.ReviewsCount )</h3>
+
+                @if (TempData["RatingError"] != null)
+                {
+                    <div class="alert alert-error">@TempData["RatingError"]</div>
+                }
+
+                @foreach (var r in Model.Ratings)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-start gap-4">
+                                <div class="avatar">
+                                    <div class="w-12 rounded-full bg-gray-100 flex items-center justify-center text-xl text-black">
+                                        @((r.User != null && !string.IsNullOrEmpty(r.User.UserName)) ? r.User.UserName[0].ToString() : "U")
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="font-medium text-black">@r.User?.UserName</div>
+                                            <div class="text-sm text-muted-foreground text-gray-500">@r.CommentDate.ToString("dd/MM/yyyy")</div>
+                                        </div>
+                                        <div class="text-right text-shadow-yellow-500">
+                                            <div class="font-bold">@r.Score★</div>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-700">@r.Comment</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right: Booking + price + rating form -->
+        <div>
+            <div class="sticky top-8 space-y-4 mx-4 border-1 border-black rounded-xl">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-3xl font-bold text-blue-600">@FormatPrice(Model.Tour.Price)</div>
+                                <div class="text-sm text-gray-700">Giá cho 1 người</div>
+                            </div>
+                            @if (Model.Tour.Discount > 0)
+                            {
+                                <span class="badge badge-accent">Giảm @Model.Tour.Discount %</span>
+                            }
+                        </div>
+
+                        @if (Model.IsAuthenticated)
+                        {
+                            <form method="post" asp-controller="Booking" asp-action="Start" class="mt-4">
+                                <input type="hidden" name="tourId" value="@Model.Tour.TourId" />
+                                <div class="form-control mb-3">
+                                    <label class="label"><span class="label-text text-black">Ngày khởi hành</span></label>
+                                    <input type="date" 
+                                           name="departureDate" 
+                                           class="input input-bordered w-full bg-white text-black" 
+                                           required 
+                                           min="@Model.Tour.TourStartDate.ToString("yyyy-MM-dd")"
+                                           max="@Model.Tour.TourEndDate.ToString("yyyy-MM-dd")" />
+                                </div>
+
+
+                                <div class="form-control mb-3">
+                                    <label class="label"><span class="label-text text-black">Số người</span></label>
+                                    <select name="quantity" id="quantity" class="select select-bordered w-full bg-white text-black">
+                                        @for (int i = 1; i <= Math.Max(1, Model.RemainingTickets); i++)
+                                        {
+                                            <option value="@i">@i người</option>
+                                        }
+                                    </select>
+                                </div>
+                                
+                                <br/>
+                                
+                                <div class="form-control mb-3">
+                                    <label class="label"><span class="label-text text-black">Tổng tiền</span></label>
+                                    <input type="text" id="totalMoney" class="input input-bordered w-full bg-white text-black" value="@Model.Tour.Price.ToString("C", new CultureInfo("vi-VN"))" readonly />
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-full">Đặt tour</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary w-full mt-4">Đăng nhập để đặt tour</a>
+                        }
+
+                        <div class="divider my-4"></div>
+
+                        <div class="text-sm text-muted-foreground">
+                            <div class="flex items-center gap-2 text-black"><i class="fas fa-shield-alt"></i> Thanh toán an toàn</div>
+                            <div class="flex items-center gap-2 mt-1 text-black"><i class="fas fa-award"></i> Đảm bảo chất lượng</div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Rating form: only if authenticated AND user has a paid ticket (CanRate) *@
+                @if (Model.IsAuthenticated && Model.CanRate)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="text-lg font-semibold">Đánh giá tour</h4>
+                            <form asp-action="SubmitRating" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="tourId" value="@Model.Tour.TourId" />
+                                <div class="form-control mb-3">
+                                    <label class="label"><span class="label-text">Số sao (1-5)</span></label>
+                                    <select name="score" class="select select-bordered w-full" required>
+                                        <option value="">Chọn</option>
+                                        <option value="5">5 - Tuyệt vời</option>
+                                        <option value="4">4 - Rất tốt</option>
+                                        <option value="3">3 - Tốt</option>
+                                        <option value="2">2 - Trung bình</option>
+                                        <option value="1">1 - Kém</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-control mb-3">
+                                    <label class="label"><span class="label-text">Bình luận</span></label>
+                                    <textarea name="comment" class="textarea textarea-bordered w-full" rows="4" placeholder="Chia sẻ trải nghiệm của bạn (tùy chọn)"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-secondary w-full">Gửi đánh giá</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else if (Model.IsAuthenticated && !Model.CanRate)
+                {
+                    <div class="card">
+                        <div class="card-body text-sm text-muted-foreground text-gray-700">
+                            Bạn chỉ có thể đánh giá tour này sau khi đã mua vé và thanh toán.
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Related tours section could go here -->
+</div>
+
+<!-- Minimal svg icons used above (or replace with fontawesome) -->
+<svg style="display:none">
+    <symbol id="star-solid" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.286 3.966c.3.921-.755 1.688-1.54 1.118L10 13.347l-3.39 2.462c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.602 9.393c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"/></symbol>
+    <symbol id="star-outline" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.286 3.966c.3.921-.755 1.688-1.54 1.118L12 17.347l-3.39 2.462c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.602 9.393c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z" stroke="currentColor" stroke-width="1" fill="none"/></symbol>
+</svg>
+
+<script>
+    const quantitySelect = document.getElementById('quantity');
+    const totalMoneyInput = document.getElementById('totalMoney');
+
+    // Get the tour price from Razor
+    const tourPrice = @Model.Tour.Price;
+
+    function updateTotal() {
+        const quantity = parseInt(quantitySelect.value);
+        const total = quantity * tourPrice;
+        // Format as currency (Vietnamese Dong)
+        totalMoneyInput.value = total.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+    }
+
+    // Update total when page loads
+    updateTotal();
+
+    // Update total whenever quantity changes
+    quantitySelect.addEventListener('change', updateTotal);
+</script>

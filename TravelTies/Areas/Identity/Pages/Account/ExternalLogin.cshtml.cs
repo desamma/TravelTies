@@ -122,6 +122,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
                 ErrorMessage = $"Error from external provider: {remoteError}";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
+
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
@@ -129,14 +130,17 @@ namespace TravelTies.Areas.Identity.Pages.Account
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
-            // Sign in the user with this external login provider if the user already has a login.
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded)
+            // If the user already has an external login, sign them in.
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
+                isPersistent: false, bypassTwoFactor: true);
+
+            if (signInResult.Succeeded)
             {
-                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
+                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity?.Name, info.LoginProvider);
                 var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
                 HttpContext.Session.SetString("CurrentUser", JsonConvert.SerializeObject(user));
-                // Redirect based on user role
+
+                // Redirect based on role
                 if (await _userManager.IsInRoleAsync(user, RoleConstants.Admin))
                 {
                     returnUrl = Url.Action("Index", "Dashboard", new { area = "Admin" });
@@ -147,70 +151,157 @@ namespace TravelTies.Areas.Identity.Pages.Account
                 }
                 else
                 {
-                    returnUrl = Url.Action("Index", "Home", new { area = "User" });
+                    returnUrl = Url.Action("Index", "Home", new { area = "Customer" });
                 }
 
                 if (returnUrl != null) return LocalRedirect(returnUrl);
             }
-            if (result.IsLockedOut)
+
+            if (signInResult.IsLockedOut)
             {
                 return RedirectToPage("./Lockout");
             }
-            else
+
+            // At this point: user does not have an external login associated in your DB.
+            // We'll attempt to auto-create the local account using external claims (Option B).
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
             {
-                var userEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
-                var existingUser = await _userRepository.GetAsync(u => u.Email == userEmail);
-                if (existingUser != null)
-                {
-                    if (existingUser.IsBanned)
-                    {
-                        ModelState.AddModelError("", "User account is banned!");
-                        return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
-                    }
-                    var isEmailConfirmed = await _userManager.IsEmailConfirmedAsync(existingUser);
-                    
-                    // Make the account confirmed if not confirmed before:
-                    if (!isEmailConfirmed)
-                    {
-                        var token = await _userManager.GenerateEmailConfirmationTokenAsync(existingUser);
-                        await _userManager.ConfirmEmailAsync(existingUser, token);
-                    }
-                    HttpContext.Session.SetString("CurrentUser", JsonConvert.SerializeObject(existingUser));
-                    _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name,
-                        info.LoginProvider);
-                    await _signInManager.SignInAsync(existingUser, isPersistent: false, authenticationMethod: null);
-                    
-                    //Redirect based on user role
-                    if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.Admin))
-                    {
-                        returnUrl = Url.Action("Dashboard", "Admin", new { area = "Admin" });
-                    }
-                    else if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.User))
-                    {
-                        returnUrl = Url.Action(nameof(Index), "User", new { area = "User" });
-
-                    }
-                    else if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.Company))
-                    {
-                        returnUrl = Url.Action(nameof(Index), "Company", new { area = "Company" });
-                    }
-
-                    if (returnUrl != null) return LocalRedirect(returnUrl);
-                }
-                
-                // If the user does not have an account, then ask the user to create an account.
-                ReturnUrl = returnUrl;
-                ProviderDisplayName = info.ProviderDisplayName;
-                if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
-                {
-                    Input = new InputModel
-                    {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
-                    };
-                }
-                return Page();
+                // Provider did not supply email — we cannot auto-create safely.
+                ErrorMessage = "Email claim not received from external provider. Please register manually.";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
+
+            // Check if an existing user with that email exists in your DB
+            var existingUser = await _userRepository.GetAsync(u => u.Email == email);
+            if (existingUser != null)
+            {
+                if (existingUser.IsBanned)
+                {
+                    ModelState.AddModelError(string.Empty, "User account is banned!");
+                    return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+                }
+
+                // Link the external login to this existing user (if not already linked) and sign in
+                var alreadyLinkedUser = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                if (alreadyLinkedUser == null)
+                {
+                    var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
+                    if (!addLoginResult.Succeeded)
+                    {
+                        _logger.LogWarning("Failed to add external login for existing user {Email}: {Errors}", email, string.Join(", ", addLoginResult.Errors.Select(e => e.Description)));
+                        // continue and try sign-in anyway
+                    }
+                }
+
+                // Ensure email confirmed (since Google verifies emails)
+                if (!await _userManager.IsEmailConfirmedAsync(existingUser))
+                {
+                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(existingUser);
+                    await _userManager.ConfirmEmailAsync(existingUser, token);
+                }
+
+                await _signInManager.SignInAsync(existingUser, isPersistent: false, authenticationMethod: null);
+                HttpContext.Session.SetString("CurrentUser", JsonConvert.SerializeObject(existingUser));
+
+                // Redirect based on role
+                if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.Admin))
+                {
+                    returnUrl = Url.Action("Dashboard", "Admin", new { area = "Admin" });
+                }
+                else if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.User))
+                {
+                    returnUrl = Url.Action(nameof(Index), "Home", new { area = "Customer" });
+                }
+                else if (await _userManager.IsInRoleAsync(existingUser, RoleConstants.Company))
+                {
+                    returnUrl = Url.Action(nameof(Index), "Company", new { area = "Company" });
+                }
+
+                if (returnUrl != null) return LocalRedirect(returnUrl);
+            }
+
+            // No existing user — create one automatically using claims
+            var newUser = new User();
+
+            // Try populate additional fields from claims
+            newUser.Email = email;
+            newUser.UserName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email; // or derive from name claim if you prefer
+            newUser.UserAvatar = info.Principal.FindFirstValue("picture") ?? GeneralConstants.DefaultAvatar;
+
+            // try to parse birthdate if present (provider-specific)
+            var dobClaim = info.Principal.FindFirstValue(ClaimTypes.DateOfBirth) ??
+                           info.Principal.FindFirstValue("birthdate"); // common alternative claim types
+            if (!string.IsNullOrEmpty(dobClaim) && DateOnly.TryParse(dobClaim, out var dob))
+            {
+                newUser.UserDOB = dob;
+            }
+
+            // Set flags explicitly
+            newUser.IsCompany = false;
+            newUser.IsBanned = false;
+
+            // Because this comes from a trusted provider (Google), mark email confirmed
+            // (only do this if you trust the provider's email verification)
+            newUser.EmailConfirmed = true;
+
+            // Persist username and email via the user store
+            await _userStore.SetUserNameAsync(newUser, newUser.UserName, CancellationToken.None);
+            await _emailStore.SetEmailAsync(newUser, newUser.Email, CancellationToken.None);
+
+            var createResult = await _userManager.CreateAsync(newUser);
+            if (!createResult.Succeeded)
+            {
+                _logger.LogError("Failed to create user for external login (email={Email}): {Errors}", email, string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                foreach (var error in createResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                // Redirect back to login with error info
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
+
+            // Link external login to created user
+            var addLogin = await _userManager.AddLoginAsync(newUser, info);
+            if (!addLogin.Succeeded)
+            {
+                _logger.LogError("Failed to add external login for newly created user {Email}: {Errors}", email, string.Join(", ", addLogin.Errors.Select(e => e.Description)));
+                // You may want to delete the created user here or show an error — we'll continue to sign in for UX.
+            }
+
+            // Assign default role
+            var addRole = await _userManager.AddToRoleAsync(newUser, RoleConstants.User);
+            if (!addRole.Succeeded)
+            {
+                _logger.LogWarning("Failed to add role to user {Email}: {Errors}", email, string.Join(", ", addRole.Errors.Select(e => e.Description)));
+            }
+
+            // Sign in the new user
+            await _signInManager.SignInAsync(newUser, isPersistent: false, authenticationMethod: info.LoginProvider);
+            HttpContext.Session.SetString("CurrentUser", JsonConvert.SerializeObject(newUser));
+
+            _logger.LogInformation("Created new user {Email} and signed in with {Provider}.", newUser.Email, info.LoginProvider);
+
+            // Redirect based on role (new users should be in User role)
+            if (await _userManager.IsInRoleAsync(newUser, RoleConstants.Admin))
+            {
+                returnUrl = Url.Action("Dashboard", "Admin", new { area = "Admin" });
+            }
+            else if (await _userManager.IsInRoleAsync(newUser, RoleConstants.User))
+            {
+                returnUrl = Url.Action(nameof(Index), "Home", new { area = "Customer" });
+            }
+            else if (await _userManager.IsInRoleAsync(newUser, RoleConstants.Company))
+            {
+                returnUrl = Url.Action(nameof(Index), "Company", new { area = "Company" });
+            }
+
+            if (returnUrl != null) return LocalRedirect(returnUrl);
+
+            // fallback
+            return LocalRedirect(Url.Content("~/"));
         }
+
 
         public async Task<IActionResult> OnPostConfirmationAsync(string returnUrl = null)
         {
@@ -272,7 +363,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
                         }
                         else if (await _userManager.IsInRoleAsync(user, RoleConstants.User))
                         {
-                            returnUrl = Url.Action(nameof(Index), "User", new { area = "User" });
+                            returnUrl = Url.Action(nameof(Index), "Home", new { area = "Customer" });
 
                         }
                         else if (await _userManager.IsInRoleAsync(user, RoleConstants.Company))

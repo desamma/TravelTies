@@ -13,6 +13,9 @@ public class Tour
 
     [MaxLength(1000)]
     public string? Description { get; set; }
+    
+    [MaxLength(200)]
+    public string? Category { get; set; } = string.Empty;
 
     [MaxLength(2000)]
     public string? About { get; set; }
