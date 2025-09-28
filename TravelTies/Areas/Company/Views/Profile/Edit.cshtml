@@ -1,0 +1,77 @@
+﻿@model TravelTies.Areas.Company.ViewModels.ProfileEditVm
+@{
+    ViewData["Title"] = "Chỉnh sửa hồ sơ";
+}
+<section class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold">Chỉnh sửa hồ sơ</h1>
+        <a asp-action="Index" class="text-sm underline">Quay lại</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="bg-white border rounded-2xl p-6 space-y-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Avatar" /> <!-- giữ URL cũ nếu không upload mới -->
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label asp-for="FullName" class="text-sm text-slate-600"></label>
+                <input asp-for="FullName" class="mt-1 w-full px-3 py-2 border rounded-lg" />
+                <span asp-validation-for="FullName" class="text-sm text-red-600"></span>
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Tên doanh nghiệp</label>
+                <input asp-for="Description" class="mt-1 w-full px-3 py-2 border rounded-lg" />
+                <span asp-validation-for="Description" class="text-sm text-red-600"></span>
+            </div>
+
+            <!-- Avatar Preview -->
+            <div>
+                <label class="text-sm text-slate-600">Ảnh đại diện hiện tại</label>
+                <div class="mt-2">
+                    @if (!string.IsNullOrWhiteSpace(Model.Avatar))
+                    {
+                        <img src="@Model.Avatar" alt="@Model.FullName" class="w-32 h-32 rounded-full object-cover border" />
+                    }
+                    else
+                    {
+                        <div class="text-sm text-slate-500">Chưa có ảnh.</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Upload mới -->
+            <div>
+                <label asp-for="AvatarFile" class="text-sm text-slate-600"></label>
+                <input asp-for="AvatarFile" type="file" accept="image/*" class="mt-1 w-full px-3 py-2 border rounded-lg" />
+                <span class="text-xs text-slate-500">Chọn ảnh từ máy, hệ thống sẽ upload lên Cloudinary và lưu URL.</span>
+                <span asp-validation-for="AvatarFile" class="text-sm text-red-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Email" class="text-sm text-slate-600"></label>
+                <input asp-for="Email" class="mt-1 w-full px-3 py-2 border rounded-lg bg-gray-100" readonly />
+            </div>
+
+            <div>
+                <label asp-for="PhoneNumber" class="text-sm text-slate-600"></label>
+                <input asp-for="PhoneNumber" class="mt-1 w-full px-3 py-2 border rounded-lg" />
+            </div>
+
+            <div class="md:col-span-2">
+                <label asp-for="ContactInfo" class="text-sm text-slate-600"></label>
+                <input asp-for="ContactInfo" class="mt-1 w-full px-3 py-2 border rounded-lg" />
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Lưu thay đổi</button>
+            <a asp-action="Index" class="px-4 py-2 rounded-lg border">Hủy</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

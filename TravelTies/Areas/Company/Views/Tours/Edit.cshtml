@@ -1,0 +1,104 @@
+﻿@model TravelTies.Areas.Company.ViewModels.TourFormVm
+@{
+    ViewData["Title"] = "Chỉnh sửa Tour";
+}
+<section class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold">Chỉnh sửa Tour</h1>
+        <a asp-area="Company" asp-controller="Tours" asp-action="Index" class="text-sm underline">Quay lại danh sách</a>
+    </div>
+
+    <form asp-action="Edit" asp-route-id="@Model.TourId" method="post" enctype="multipart/form-data" class="bg-white border rounded-xl p-6 space-y-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="TourId" />
+        <input type="hidden" asp-for="Picture" /> <!-- giữ URL cũ nếu không upload mới -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-slate-600">Tên tour *</label>
+                <input asp-for="TourName" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+                <span asp-validation-for="TourName" class="text-sm text-red-600"></span>
+            </div>
+            <div>
+                <label class="text-sm text-slate-600">Điểm đến *</label>
+                <input asp-for="Destination" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+                <span asp-validation-for="Destination" class="text-sm text-red-600"></span>
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Ngày bắt đầu *</label>
+                <input asp-for="TourStartDate" type="date" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+            <div>
+                <label class="text-sm text-slate-600">Ngày kết thúc *</label>
+                <input asp-for="TourEndDate" type="date" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Số lượng khách *</label>
+                <input asp-for="NumberOfPassenger" type="number" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+            <div>
+                <label class="text-sm text-slate-600">Giá *</label>
+                <input asp-for="Price" type="number" step="1000" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Giảm giá (%)</label>
+                <input asp-for="Discount" type="number" step="1" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Ảnh hiện tại</label>
+                <div class="mt-2">
+                    @if (!string.IsNullOrWhiteSpace(Model.Picture))
+                    {
+                        <img src="@Model.Picture" alt="@Model.TourName" class="w-full max-w-sm h-48 object-cover rounded border" />
+                    }
+                    else
+                    {
+                        <div class="text-sm text-slate-500">Chưa có ảnh.</div>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Chọn ảnh mới (nếu muốn thay)</label>
+                <input asp-for="PictureFile" type="file" accept="image/*" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+                <span asp-validation-for="PictureFile" class="text-sm text-red-600"></span>
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-600">Sao khách sạn</label>
+                <input asp-for="HotelStars" type="number" min="1" max="5" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+            <div>
+                <label class="text-sm text-slate-600">Hoa hồng (%)</label>
+                <input asp-for="Commission" type="number" step="0.1" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg" />
+            </div>
+
+            <div class="lg:col-span-2">
+                <label class="text-sm text-slate-600">Mô tả tour</label>
+                <textarea asp-for="Description" rows="4" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg"></textarea>
+            </div>
+            <div class="lg:col-span-2">
+                <label class="text-sm text-slate-600">Lịch trình / Ghi chú</label>
+                <textarea asp-for="TourScheduleDescription" rows="4" class="mt-1 w-full px-3 py-2 bg-white border rounded-lg"></textarea>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input asp-for="SupportTourMatching" type="checkbox" class="w-4 h-4" />
+                <label for="SupportTourMatching" class="text-sm">Hỗ trợ tour ghép (matching)</label>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Lưu thay đổi</button>
+            <a asp-area="Company" asp-controller="Tours" asp-action="Index" class="px-4 py-2 rounded-lg border">Hủy</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

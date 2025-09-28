@@ -1,0 +1,124 @@
+﻿@model TravelTies.Areas.Company.ViewModels.AnalyticsVm
+@{
+    ViewData["Title"] = "Thống kê & Phân tích";
+}
+
+<section class="space-y-8">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold">Thống kê &amp; Phân tích</h1>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white border rounded-xl p-4">
+            <div class="text-sm text-slate-500">Doanh thu tháng này</div>
+            <div class="text-2xl font-bold mt-1">@Model.ThisMonthRevenue.ToString("N0") đ</div>
+        </div>
+        <div class="bg-white border rounded-xl p-4">
+            <div class="text-sm text-slate-500">Booking tháng này</div>
+            <div class="text-2xl font-bold mt-1">@Model.ThisMonthBookings</div>
+        </div>
+        <div class="bg-white border rounded-xl p-4">
+            <div class="text-sm text-slate-500">Đánh giá trung bình</div>
+            <div class="text-2xl font-bold mt-1">@Model.AvgRating.ToString("0.0")</div>
+        </div>
+        <div class="bg-white border rounded-xl p-4">
+            <div class="text-sm text-slate-500">Tỷ lệ chuyển đổi</div>
+            <div class="text-2xl font-bold mt-1">@Model.ConversionRate.ToString("0.##")%</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Line Chart -->
+        <div class="bg-white border rounded-xl p-4">
+            <div class="font-medium mb-3">Xu hướng doanh thu 12 tháng</div>
+            <div class="relative w-full h-72">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Pie Chart -->
+        <div class="bg-white border rounded-xl p-4">
+            <div class="font-medium mb-3">Cơ cấu booking theo tour</div>
+            <div class="relative w-full h-72">
+                <canvas id="bookingPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Tours -->
+    <div class="bg-white border rounded-xl p-4">
+        <div class="font-medium mb-3">Top tour theo doanh thu</div>
+        @if (!Model.TopTours.Any())
+        {
+            <div class="text-sm text-slate-500">Chưa có dữ liệu.</div>
+        }
+        else
+        {
+            <div class="space-y-4">
+                @foreach (var t in Model.TopTours)
+                {
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <div>
+                            <div class="font-medium">@t.TourName</div>
+                            <div class="text-xs text-slate-500">
+                                @t.Booked/@t.Capacity khách • @t.Rating.ToString("0.0") ★
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">@t.Revenue.ToString("N0") đ</div>
+                            <div class="w-40 h-2 bg-slate-100 rounded mt-1">
+                                <div class="h-2 bg-indigo-500 rounded" style="width:@t.Occupancy%"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Line Chart (Revenue)
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueLabels)),
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueTrend)),
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79,70,229,0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Pie Chart (Booking by tour)
+        const bookingCtx = document.getElementById('bookingPieChart').getContext('2d');
+        new Chart(bookingCtx, {
+            type: 'pie',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopTours.Select(x => x.TourName))),
+                datasets: [{
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopTours.Select(x => x.Booked))),
+                    backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+}

@@ -1,0 +1,82 @@
+﻿@model TravelTies.Areas.Company.ViewModels.TourIndexVm
+@{
+    ViewData["Title"] = "Quản lý Tour";
+}
+<section class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold">Quản lý Tour</h1>
+        <a class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+           asp-area="Company" asp-controller="Tours" asp-action="Create">Tạo tour mới</a>
+    </div>
+
+    <div class="flex items-center gap-3 text-sm">
+        <a asp-action="Index" asp-route-status="all" class="px-3 py-1.5 rounded-full border @(Model.Filter.Status=="all"?"bg-slate-900 text-white border-slate-900":"")">
+            Tất cả (@Model.Total)
+        </a>
+        <a asp-action="Index" asp-route-status="active" class="px-3 py-1.5 rounded-full border @(Model.Filter.Status=="active"?"bg-slate-900 text-white border-slate-900":"")">
+            Đang hoạt động (@Model.Active)
+        </a>
+        <a asp-action="Index" asp-route-status="draft" class="px-3 py-1.5 rounded-full border @(Model.Filter.Status=="draft"?"bg-slate-900 text-white border-slate-900":"")">
+            Bản nháp (@Model.Draft)
+        </a>
+        <a asp-action="Index" asp-route-status="full" class="px-3 py-1.5 rounded-full border @(Model.Filter.Status=="full"?"bg-slate-900 text-white border-slate-900":"")">
+            Đầy chỗ (@Model.Full)
+        </a>
+
+        <form method="get" class="ml-auto flex items-center gap-2">
+            <input type="hidden" name="status" value="@Model.Filter.Status" />
+            <input name="q" value="@Model.Filter.Q" class="w-72 px-3 py-2 text-sm bg-white border rounded-lg" placeholder="Tìm theo tên / địa điểm..." />
+            <button class="px-3 py-2 text-sm border rounded-lg hover:bg-slate-50">Tìm</button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        @if (!Model.Items.Any())
+        {
+            <div class="col-span-full text-sm text-slate-500">Chưa có tour nào khớp điều kiện.</div>
+        }
+        else
+        {
+            @foreach (var tour in Model.Items)
+            {
+                <article class="bg-white border rounded-xl overflow-hidden">
+                    <div class="h-40 bg-slate-200">
+                        @if (!string.IsNullOrWhiteSpace(tour.Picture))
+                        {
+                            <img src="@tour.Picture" alt="@tour.TourName" class="w-full h-40 object-cover" />
+                        }
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="font-medium">@tour.TourName</h3>
+                            <div class="text-xs text-slate-500 mt-1">@tour.Destination • @tour.Start.ToString("dd/MM") - @tour.End.ToString("dd/MM")</div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full border
+                                    @(tour.Status == "Đang hoạt động" ? "bg-emerald-50 text-emerald-700" :
+                                                                tour.Status == "Đầy chỗ" ? "bg-orange-50 text-orange-700" : "bg-slate-100")">@tour.Status</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <div class="text-emerald-600 font-semibold">@tour.Price.ToString("N0") đ</div>
+                    <div class="text-slate-500">@tour.Booked/@tour.NumberOfPassenger người</div>
+                </div>
+                <div class="h-2 bg-slate-100 rounded">
+                    <div class="h-2 bg-emerald-500 rounded" style="width:@tour.OccupancyPercent%"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a class="px-3 py-2 border rounded-lg hover:bg-slate-50"
+                       asp-action="Edit" asp-route-id="@tour.TourId">Chỉnh sửa</a>
+                    <a class="px-3 py-2 border rounded-lg hover:bg-slate-50"
+                       asp-action="Details" asp-route-id="@tour.TourId">Xem chi tiết</a>
+                    <form asp-action="Delete" asp-route-id="@tour.TourId" method="post" class="ml-auto"
+                          onsubmit="return confirm('Xóa tour này?');">
+                        @Html.AntiForgeryToken()
+                        <button class="px-3 py-2 border rounded-lg hover:bg-red-50">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+                }
+        }
+    </div>
+</section>

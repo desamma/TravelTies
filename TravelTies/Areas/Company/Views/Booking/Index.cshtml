@@ -1,0 +1,130 @@
+﻿@model TravelTies.Areas.Company.ViewModels.BookingIndexVm
+@{
+    ViewData["Title"] = "Quản lý Booking";
+}
+
+<section class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold">Quản lý Booking</h1>
+        <div class="flex items-center gap-2">
+            <a class="px-3 py-2 text-sm border rounded-lg hover:bg-slate-50" asp-action="Index">Xuất Excel</a>
+            <a class="px-3 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700" href="#">Tạo booking mới</a>
+        </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white border rounded-xl p-4"><div class="text-sm text-slate-500">Tổng booking</div><div class="text-xl font-semibold mt-1">@Model.Total</div></div>
+        <div class="bg-white border rounded-xl p-4"><div class="text-sm text-slate-500">Đã xác nhận</div><div class="text-xl font-semibold mt-1 text-emerald-700">@Model.Confirmed</div></div>
+        <div class="bg-white border rounded-xl p-4"><div class="text-sm text-slate-500">Chờ xác nhận</div><div class="text-xl font-semibold mt-1 text-orange-600">@Model.Pending</div></div>
+        <div class="bg-white border rounded-xl p-4"><div class="text-sm text-slate-500">Tổng doanh thu</div><div class="text-xl font-semibold mt-1">@Model.TotalRevenue.ToString("N0") đ</div></div>
+    </div>
+
+    <!-- Filter -->
+    <form method="get" class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <input name="q" value="@Model.Filter.Q" class="w-full md:w-96 px-3 py-2 text-sm bg-white border rounded-lg" placeholder="Tìm kiếm tên khách / email / tour / mã..." />
+
+        <select name="status" class="px-3 py-2 text-sm bg-white border rounded-lg">
+            <option value="all" selected="@(Model.Filter.Status == "all")">Tất cả</option>
+            <option value="confirmed" selected="@(Model.Filter.Status == "confirmed")">Đã xác nhận</option>
+            <option value="pending" selected="@(Model.Filter.Status == "pending")">Chờ xác nhận</option>
+
+        </select>
+
+        <div class="flex items-center gap-2">
+            <input type="date" name="from" value="@(Model.Filter.From?.ToString("yyyy-MM-dd"))" class="px-3 py-2 text-sm bg-white border rounded-lg" />
+            <span class="text-sm text-slate-500">→</span>
+            <input type="date" name="to" value="@(Model.Filter.To?.ToString("yyyy-MM-dd"))" class="px-3 py-2 text-sm bg-white border rounded-lg" />
+        </div>
+
+        <button class="px-3 py-2 text-sm border rounded-lg hover:bg-slate-50">Lọc</button>
+    </form>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white border rounded-xl">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50">
+                <tr class="text-left">
+                    <th class="px-4 py-3">Mã</th>
+                    <th class="px-4 py-3">Khách hàng</th>
+                    <th class="px-4 py-3">Tour</th>
+                    <th class="px-4 py-3">Ngày tour</th>
+                    <th class="px-4 py-3">Số người</th>
+                    <th class="px-4 py-3">Trạng thái</th>
+                    <th class="px-4 py-3">Thanh toán</th>
+                    <th class="px-4 py-3">Tổng tiền</th>
+                    <th class="px-4 py-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="9" class="px-4 py-6 text-center text-slate-500">Không có booking nào.</td></tr>
+                }
+                else
+                {
+                    @foreach (var b in Model.Items)
+                    {
+                        <tr class="border-t">
+                            <td class="px-4 py-3">BK@b.Code</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">@b.CustomerName</div>
+                                <div class="text-xs text-slate-500">@b.CustomerEmail</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    @if (!string.IsNullOrWhiteSpace(b.Picture))
+                                    {
+                                        <img src="@b.Picture" class="w-8 h-8 rounded object-cover" />
+                                    }
+                                    <div>
+                                        <div class="font-medium">@b.TourName</div>
+                                        <div class="text-xs text-slate-500">@b.Destination</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">@b.TourDate.ToString("dd/MM/yyyy")</td>
+                            <td class="px-4 py-3">@b.People người</td>
+                            <td class="px-4 py-3">
+                                @if (b.IsPayed)
+                                {
+                                    <span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border">Đã xác nhận</span>
+                                }
+                                else
+                                {
+                                    <span class="text-xs px-2 py-1 rounded-full bg-orange-50 text-orange-700 border">Chờ xác nhận</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3">
+                                @if (b.IsPayed)
+                                {
+                                    <span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border">Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span class="text-xs px-2 py-1 rounded-full bg-slate-100 border">Chưa thanh toán</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3">@b.Total.ToString("N0") đ</td>
+                            <td class="px-4 py-3">
+                                <div class="inline-flex items-center gap-2">
+                                    @if (!b.IsPayed)
+                                    {
+                                        <form asp-action="Confirm" method="post" asp-route-id="@b.TicketId" onsubmit="return confirm('Xác nhận thanh toán booking này?');">
+                                            @Html.AntiForgeryToken()
+                                            <button class="px-3 py-1 border rounded-lg">Xác nhận</button>
+                                        </form>
+                                    }
+                                    <form asp-action="Delete" method="post" asp-route-id="@b.TicketId" onsubmit="return confirm('Hủy booking này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button class="px-3 py-1 border rounded-lg">Hủy</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
