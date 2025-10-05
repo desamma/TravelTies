@@ -1,5 +1,6 @@
 @model TravelTies.Areas.Customer.Models.TourDetailViewModel
 @using System.Globalization
+@using System.Security.Claims
 @using Models.Models
 @inject IHttpContextAccessor Accessor
 
@@ -8,6 +9,13 @@
     string FormatPrice(decimal p) => string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", p);
     string FormatDateOnly(DateOnly d) => d.ToString("dd/MM/yyyy");
     var imageUrls = (Model.Tour.Picture ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+    // Lấy userId từ Claims (ưu tiên chuẩn ASP.NET Core)
+    Guid? currentUserId = null;
+    var claimId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (Guid.TryParse(claimId, out var g)) currentUserId = g;
+
+    // (tuỳ chọn) session user cũ nếu dự án bạn đang dùng
     var userString = Accessor.HttpContext.Session.GetString("CurrentUser");
     User currentUser = null;
     if (userString != null)
@@ -17,6 +25,19 @@
 
     var tourId = Model.Tour.TourId;
     var tourPrice = Model.Tour.Price;
+
+    // Rating của chính tôi (nếu có)
+    var myRating = currentUserId.HasValue
+        ? Model.Ratings.FirstOrDefault(r => r.UserId == currentUserId)
+        : null;
+
+    string RenderStars(int score)
+    {
+        // Trả về chuỗi ★/☆ (không dùng HTML để đơn giản)
+        var full = new string('★', Math.Max(0, Math.Min(score, 5)));
+        var empty = new string('☆', 5 - Math.Max(0, Math.Min(score, 5)));
+        return full + empty;
+    }
 }
 
 <section class="bg-muted/30 py-4">
@@ -61,10 +82,8 @@
                 else
                 {
                     <div class="w-full h-full relative">
-                        <img src=@Url.Content("https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp")
-                             class="absolute inset-0 w-full h-full object-cover filter blur-xl scale-110"/>
-                        <img src=@Url.Content("https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp")
-                             class="relative w-full h-full object-contain rounded-2xl"/>
+                        <img src="~/images/no-image-bg.jpg" class="absolute inset-0 w-full h-full object-cover filter blur-xl scale-110"/>
+                        <img src="~/images/no-image.png" class="relative w-full h-full object-contain rounded-2xl"/>
                     </div>
                 }
             </div>
@@ -75,7 +94,6 @@
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
                             <span class="badge badge-secondary">@Model.Tour.Category</span>
-                            @*<span class="badge badge-outline text-yellow-300">@Model.Tour.HotelStars</span>*@
                         </div>
                         <h1 class="text-3xl font-bold text-black">@Model.Tour.TourName</h1>
                         <div class="flex items-center gap-6 text-muted-foreground text-gray-700">
@@ -116,14 +134,6 @@
                 <p class="text-muted-foreground leading-relaxed text-black">@Model.Tour.Description</p>
             </div>
 
-            <!-- Tabs -->
-            @*<div class="tabs tabs-boxed">
-                <a class="tab tab-active text-black">Điểm nổi bật</a>
-                <a class="tab text-black">Lịch trình</a>
-                <a class="tab text-black">Bao gồm</a>
-                <a class="tab text-black">Đánh giá (@Model.ReviewsCount)</a>
-            </div>*@
-
             <div class="container shadow-md hover:shadow-lg border-none rounded-md">
                 <!-- Highlights -->
                 <div class="card">
@@ -135,8 +145,7 @@
                                 {
                                     if (!string.IsNullOrWhiteSpace(hi))
                                     {
-                                        <li>@hi</li>
-                                        ;
+                                        <li>@hi</li>;
                                     }
                                 }
                             }
@@ -148,15 +157,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h3 class="text-lg font-semibold mb-3 text-black">Lịch trình</h3>
-                        @* If you store a schedule list elsewhere, render it. Here we fallback to TourScheduleDescription *@
                         <ul class="list-disc list-inside space-y-2 text-gray-700">
                             @{
                                 foreach (var hi in Model.Tour.TourScheduleDescription?.Split(',') ?? Array.Empty<string>())
                                 {
                                     if (!string.IsNullOrWhiteSpace(hi))
                                     {
-                                        <li>@hi</li>
-                                        ;
+                                        <li>@hi</li>;
                                     }
                                 }
                             }
@@ -173,7 +180,6 @@
                                 <li><i class="fa-solid fa-check"></i> Xe vận chuyển đời mới</li>
                                 <li><i class="fa-solid fa-check"></i> Hướng dẫn viên</li>
                                 <li><i class="fa-solid fa-check"></i> Vé tham quan theo chương trình</li>
-                                @* Replace with actual list when available *@
                             </ul>
                         </div>
                     </div>
@@ -192,7 +198,6 @@
                 <div class="card">
                     <div class="card-body">
                         <h3 class="text-lg font-semibold mb-3 text-black">Chính sách</h3>
-                        @* If you store a schedule list elsewhere, render it. Here we fallback to TourScheduleDescription *@
                         <ul class="list-disc list-inside space-y-2 text-blue-500" style="list-style-type:none;">
                             <li>Yêu cầu đặt trước 14 ngày</li>
                             <li>Huỷ tour trước 7 ngày: Hoàn 50% phí</li>
@@ -203,40 +208,98 @@
                     </div>
                 </div>
             </div>
+
             <!-- Reviews -->
             <div class="space-y-4">
-                <h3 class="text-2xl font-bold text-black">Đánh giá từ khách hàng( @Model.ReviewsCount )</h3>
+                <h3 class="text-2xl font-bold text-black">Đánh giá từ khách hàng (@Model.ReviewsCount)</h3>
 
                 @if (TempData["RatingError"] != null)
                 {
                     <div class="alert alert-error">@TempData["RatingError"]</div>
                 }
 
-                @foreach (var r in Model.Ratings)
+                @if (!Model.Ratings.Any())
                 {
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="flex items-start gap-4">
-                                <div class="avatar">
-                                    <div class="w-12 rounded-full bg-gray-100 flex items-center justify-center text-xl text-black">
-                                        @((r.User != null && !string.IsNullOrEmpty(r.User.UserName)) ? r.User.UserName[0].ToString() : "U")
-                                    </div>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <div class="font-medium text-black">@r.User?.UserName</div>
-                                            <div class="text-sm text-muted-foreground text-gray-500">@r.CommentDate.ToString("dd/MM/yyyy")</div>
+                    <div class="text-sm text-gray-700">Chưa có bình luận nào.</div>
+                }
+                else
+                {
+                    foreach (var r in Model.Ratings)
+                    {
+                        var isMyComment = currentUserId.HasValue && r.UserId == currentUserId;
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="flex items-start gap-4">
+                                    <div class="avatar">
+                                        <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-xl text-black">
+                                            @if (!string.IsNullOrWhiteSpace(r?.User?.UserAvatar))
+                                            {
+                                                <img src="@r.User.UserAvatar" alt="avatar" class="w-full h-full object-cover"/>
+                                            }
+                                            else
+                                            {
+                                                @((r?.User != null && !string.IsNullOrEmpty(r.User.UserName)) ? r.User.UserName[0].ToString() : "U")
+                                            }
                                         </div>
-                                        <div class="text-right text-shadow-yellow-500">
-                                            <div class="font-bold">@r.Score★</div>
-                                        </div>
                                     </div>
-                                    <p class="mt-2 text-sm text-gray-700">@r.Comment</p>
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <div class="font-medium text-black">@r.User?.UserName</div>
+                                                <div class="text-sm text-muted-foreground text-gray-500">@r.CommentDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="font-bold text-yellow-600">@RenderStars(r.Score)</div>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(r.Comment))
+                                        {
+                                            <p class="mt-2 text-sm text-gray-700 whitespace-pre-wrap">@r.Comment</p>
+                                        }
+
+                                        @* Nút sửa/xoá chỉ hiện với chủ bình luận *@
+                                        @if (isMyComment)
+                                        {
+                                            <details class="mt-3">
+                                                <summary class="cursor-pointer text-sm text-blue-600">Chỉnh sửa bình luận</summary>
+                                                <div class="mt-2">
+                                                    <form method="post" asp-action="EditRating" class="space-y-2">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="tourId" value="@Model.Tour.TourId"/>
+                                                        <input type="hidden" name="ratingId" value="@r.RatingId"/>
+
+                                                        <label class="block text-xs text-gray-600">Số sao</label>
+                                                        <select name="score" class="select select-bordered bg-white text-black" required>
+                                                            @for (int s = 5; s >= 1; s--)
+                                                            {
+                                                                <option value="@s" selected="@(s == r.Score)">@s</option>
+                                                            }
+                                                        </select>
+
+                                                        <label class="block text-xs text-gray-600">Bình luận</label>
+                                                        <textarea name="comment" rows="3" maxlength="2000" class="textarea textarea-bordered w-full bg-white text-black">@r.Comment</textarea>
+
+                                                        <div class="flex items-center gap-2">
+                                                            <button type="submit" class="btn btn-primary btn-sm">Lưu</button>
+
+                                                            <form method="post" asp-action="DeleteRating" onsubmit="return confirm('Xoá bình luận của bạn?');">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="tourId" value="@Model.Tour.TourId"/>
+                                                                <input type="hidden" name="ratingId" value="@r.RatingId"/>
+                                                                <button type="submit" class="btn btn-outline btn-error btn-sm">Xoá</button>
+
+                                                            </form>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </details>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
             </div>
         </div>
@@ -352,88 +415,128 @@
                     </div>
                 </div>
 
-                @* Rating form: only if authenticated AND user has a paid ticket (CanRate) *@
-                @if (Model.IsAuthenticated && Model.CanRate)
+                @* Rating form (bên phải): chỉ hiện nếu đã đăng nhập *@
+                @if (Model.IsAuthenticated)
                 {
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="text-lg font-semibold text-blue-500">Đánh giá tour</h4>
-                            <form asp-action="SubmitRating" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="tourId" value="@Model.Tour.TourId"/>
-                                <div class="form-control mb-3 ">
-                                    <label class="label"><span class="label-text text-gray-700">Số sao (1-5)</span></label>
-                                    <select name="score" class="select select-bordered w-full bg-white text-black" required>
-                                        <option value="">Chọn</option>
-                                        <option value="5">5 - Tuyệt vời</option>
-                                        <option value="4">4 - Rất tốt</option>
-                                        <option value="3">3 - Tốt</option>
-                                        <option value="2">2 - Trung bình</option>
-                                        <option value="1">1 - Kém</option>
-                                    </select>
-                                </div>
+                    @* Nếu người dùng đủ điều kiện đánh giá *@
+                    @if (Model.CanRate)
+                    {
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="text-lg font-semibold text-blue-500">Đánh giá tour</h4>
 
-                                <div class="form-control mb-3">
-                                    <label class="label"><span class="label-text text-gray-700">Bình luận</span></label>
-                                    <textarea name="comment" class="textarea textarea-bordered w-full bg-white text-black" rows="4"
-                                              placeholder="Chia sẻ trải nghiệm của bạn (tùy chọn)"></textarea>
-                                </div>
+                                @if (myRating == null)
+                                {
+                                    <!-- Tạo mới -->
+                                    <form asp-action="SubmitRating" method="post" class="space-y-3">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="tourId" value="@Model.Tour.TourId"/>
+                                        <div>
+                                            <label class="label"><span class="label-text text-gray-700">Số sao (1-5)</span></label>
+                                            <select name="score" class="select select-bordered w-full bg-white text-black" required>
+                                                <option value="">Chọn</option>
+                                                <option value="5">5 - Tuyệt vời</option>
+                                                <option value="4">4 - Rất tốt</option>
+                                                <option value="3">3 - Tốt</option>
+                                                <option value="2">2 - Trung bình</option>
+                                                <option value="1">1 - Kém</option>
+                                            </select>
+                                        </div>
 
-                                <button type="submit" class="btn btn-secondary w-full">Gửi đánh giá</button>
-                            </form>
+                                        <div>
+                                            <label class="label"><span class="label-text text-gray-700">Bình luận</span></label>
+                                            <textarea name="comment" class="textarea textarea-bordered w-full bg-white text-black" rows="4"
+                                                      placeholder="Chia sẻ trải nghiệm của bạn (tối đa 2000 ký tự)"></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-secondary w-full">Gửi đánh giá</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <!-- Sửa/Xoá -->
+                                    <div class="mb-2 text-sm text-gray-700">
+                                        Bạn đã đánh giá: <strong class="text-yellow-600">@RenderStars(myRating.Score)</strong>
+                                    </div>
+
+                                    <form asp-action="EditRating" method="post" class="space-y-3">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="tourId" value="@Model.Tour.TourId" />
+                                        <input type="hidden" name="ratingId" value="@myRating.RatingId" />
+
+                                        <div>
+                                            <label class="label"><span class="label-text text-gray-700">Số sao (1-5)</span></label>
+                                            <select name="score" class="select select-bordered w-full bg-white text-black" required>
+                                                @for (int s = 5; s >= 1; s--)
+                                                {
+                                                    <option value="@s" selected="@(s == myRating.Score)">@s</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="label"><span class="label-text text-gray-700">Bình luận</span></label>
+                                            <textarea name="comment" class="textarea textarea-bordered w-full bg-white text-black" rows="4">@myRating.Comment</textarea>
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="btn btn-primary btn-sm">Lưu</button>
+
+                                            <!-- form xoá tách riêng, không lồng -->
+                                            <form asp-action="DeleteRating" method="post" onsubmit="return confirm('Xoá bình luận của bạn?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="tourId" value="@Model.Tour.TourId" />
+                                                <input type="hidden" name="ratingId" value="@myRating.RatingId" />
+                                                <button type="submit" class="btn btn-outline btn-error btn-sm">Xoá</button>
+                                            </form>
+                                        </div>
+                                    </form>
+                                }
+
+                            </div>
                         </div>
-                    </div>
-                }
-                else if (Model.IsAuthenticated && !Model.CanRate)
-                {
-                    <div class="card">
-                        <div class="card-body text-sm text-muted-foreground text-gray-700">
-                            Bạn chỉ có thể đánh giá tour này sau khi đã mua vé và thanh toán.
+                    }
+                    else
+                    {
+                        <div class="card">
+                            <div class="card-body text-sm text-muted-foreground text-gray-700">
+                                Bạn chỉ có thể đánh giá tour này sau khi đã mua vé và thanh toán.
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
             </div>
         </div>
     </div>
-
-    <!-- Related tours section could go here -->
 </div>
 
-<!-- Minimal svg icons used above (or replace with fontawesome) -->
+<!-- Minimal svg icons used above -->
 <svg style="display:none">
     <symbol id="star-solid" viewBox="0 0 20 20">
-        <path
-            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.286 3.966c.3.921-.755 1.688-1.54 1.118L10 13.347l-3.39 2.462c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.602 9.393c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"/>
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.286 3.966c.3.921-.755 1.688-1.54 1.118L10 13.347l-3.39 2.462c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.602 9.393c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"/>
     </symbol>
     <symbol id="star-outline" viewBox="0 0 24 24">
-        <path
-            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.286 3.966c.3.921-.755 1.688-1.54 1.118L12 17.347l-3.39 2.462c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.602 9.393c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"
-            stroke="currentColor" stroke-width="1" fill="none"/>
+        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.39 2.462a1 1 0 00-.364 1.118l1.286 3.966c.3.921-.755 1.688-1.54 1.118L12 17.347l-3.39 2.462c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.602 9.393c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.966z"
+              stroke="currentColor" stroke-width="1" fill="none"/>
     </symbol>
 </svg>
 
 <script>
     const quantitySelect = document.getElementById('quantity');
     const totalMoneyInput = document.getElementById('totalMoney');
-
-    // Get the tour price from Razor
     const tourPrice = @Model.Tour.Price;
 
     function updateTotal() {
         const quantity = parseInt(quantitySelect.value);
         const total = quantity * tourPrice;
-        // Format as currency (Vietnamese Dong)
         totalMoneyInput.value = total.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
     }
 
-    // Update total when page loads
-    updateTotal();
-
-    // Update total whenever quantity changes
-    quantitySelect.addEventListener('change', updateTotal);
+    if (quantitySelect && totalMoneyInput) {
+        updateTotal();
+        quantitySelect.addEventListener('change', updateTotal);
+    }
 </script>
-
-<!-- Script -->
 
 @section Scripts {
     <script>
@@ -452,69 +555,64 @@
             const modal_displayTotal = document.getElementById('modal_displayTotal');
             const cancelModalBtn = document.getElementById('cancelModalBtn');
 
-            const tourPrice = @Model.Tour.Price; // decimal -> renders as number
+            const tourPrice = @Model.Tour.Price;
 
             function formatCurrency(num) {
                 return num.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'});
             }
 
             function updateTotal() {
+                if (!quantitySelect || !totalMoneyInput) return;
                 const qty = parseInt(quantitySelect.value || '1', 10);
                 const total = qty * tourPrice;
                 totalMoneyInput.value = formatCurrency(total);
             }
 
-            // initial update
             updateTotal();
+            if (quantitySelect) quantitySelect.addEventListener('change', updateTotal);
 
-            quantitySelect.addEventListener('change', updateTotal);
+            if (openBtn) {
+                openBtn.addEventListener('click', function () {
+                    const dateVal = departureDateInput.value;
+                    const qty = parseInt(quantitySelect.value || '1', 10);
 
-            // When open button clicked -> validate date & quantity then open modal and fill fields
-            openBtn.addEventListener('click', function () {
-                const dateVal = departureDateInput.value;
-                const qty = parseInt(quantitySelect.value || '1', 10);
+                    if (!dateVal) {
+                        alert('Vui lòng chọn ngày khởi hành.');
+                        return;
+                    }
 
-                if (!dateVal) {
-                    alert('Vui lòng chọn ngày khởi hành.');
-                    return;
-                }
+                    const min = new Date(departureDateInput.min);
+                    const max = new Date(departureDateInput.max);
+                    const chosen = new Date(dateVal);
+                    if (chosen < min || chosen > max) {
+                        alert('Ngày khởi hành không hợp lệ.');
+                        return;
+                    }
 
-                // client-side check date range (HTML input already limits via min/max, but double-check)
-                const min = new Date(departureDateInput.min);
-                const max = new Date(departureDateInput.max);
-                const chosen = new Date(dateVal);
-                if (chosen < min || chosen > max) {
-                    alert('Ngày khởi hành không hợp lệ.');
-                    return;
-                }
+                    if (qty < 1) {
+                        alert('Số lượng phải >= 1');
+                        return;
+                    }
 
-                // check qty positive
-                if (qty < 1) {
-                    alert('Số lượng phải >= 1');
-                    return;
-                }
+                    const total = qty * tourPrice;
 
-                const total = qty * tourPrice;
+                    modal_tourDate.value = dateVal;
+                    modal_quantity.value = qty;
+                    modal_ticketPrice.value = total;
 
-                // fill modal fields
-                modal_tourDate.value = dateVal;
-                modal_quantity.value = qty;
-                modal_ticketPrice.value = total;
+                    modal_displayDate.value = new Date(dateVal).toLocaleDateString('vi-VN');
+                    modal_displayQuantity.value = qty + ' người';
+                    modal_displayTotal.value = formatCurrency(total);
 
-                modal_displayDate.value = new Date(dateVal).toLocaleDateString('vi-VN');
-                modal_displayQuantity.value = qty + ' người';
-                modal_displayTotal.value = formatCurrency(total);
+                    modalCheckbox.checked = true;
+                });
+            }
 
-                // open modal (set checkbox true)
-                modalCheckbox.checked = true;
-            });
-
-            // cancel button closes modal
-            cancelModalBtn.addEventListener('click', function () {
-                modalCheckbox.checked = false;
-            });
-
-            // auto update total inside modal if quantity/date changed before opening is already handled
+            if (cancelModalBtn) {
+                cancelModalBtn.addEventListener('click', function () {
+                    modalCheckbox.checked = false;
+                });
+            }
         })();
     </script>
 }
