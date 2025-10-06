@@ -31,13 +31,22 @@
             <a href="/" class="flex items-center text-sm font-medium text-blue-600 hover:text-green-500">
                 <i class="fas fa-home mr-1"></i> Trang chủ
             </a>
-            <a asp-area="Customer" asp-action="Index" asp-controller="Tour" class="text-sm font-medium text-gray-700 hover:text-green-500">Tours</a>
-            <a href="/offers" class="text-sm font-medium text-gray-700 hover:text-green-500">Ưu đãi</a>
-            <a href="/featured" class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
+
+            <a asp-area="Customer" asp-action="Index" asp-controller="Tour"
+               class="text-sm font-medium text-gray-700 hover:text-green-500">Tours</a>
+
+            <!-- chỉ đổi href, giữ nguyên classes -->
+            <a href="@Url.Action("Deals", "Tour", new { area = "Customer" })"
+               class="text-sm font-medium text-gray-700 hover:text-green-500">Ưu đãi</a>
+
+            <a href="@Url.Action("Featured", "Tour", new { area = "Customer" })"
+               class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
                 <i class="far fa-star mr-1"></i> Nổi bật
             </a>
+
             <a href="/support" class="text-sm font-medium text-gray-700 hover:text-green-500">Hỗ trợ</a>
         </div>
+
 
         <!-- Right Actions -->
         <div class="flex items-center space-x-4">

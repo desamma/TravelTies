@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using TravelTies.Areas.Customer.Models;
+using System;                // để dùng Math, DateOnly
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace TravelTies.Areas.Customer.Controllers;
 
@@ -74,6 +78,158 @@ public class TourController : Controller
         ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / PageSize);
 
         return View(tours);
+    }
+
+    // ======================== ƯU ĐÃI (DEALS) ========================
+    // Clone Index nhưng chỉ hiển thị tour có Discount > 0, sắp xếp giảm dần theo Discount rồi Price
+    public async Task<IActionResult> Deals(
+        string? search,
+        string? category,
+        DateTime? departureDate,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int page = 1)
+    {
+        var query = _tourRepo.GetAllQueryable()
+            .Where(t => t.Discount > 0);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(t => t.TourName.Contains(search) || t.Destination.Contains(search));
+
+        if (!string.IsNullOrWhiteSpace(category) && category != "Tất cả")
+            query = query.Where(t => t.Category == category);
+
+        if (departureDate.HasValue)
+        {
+            var d = DateOnly.FromDateTime(departureDate.Value);
+            query = query.Where(t => t.TourStartDate <= d && t.TourEndDate >= d);
+        }
+
+        if (minPrice.HasValue) query = query.Where(t => t.Price >= minPrice.Value);
+        if (maxPrice.HasValue) query = query.Where(t => t.Price <= maxPrice.Value);
+
+        var totalItems = await query.CountAsync();
+
+        var tours = await query
+            .OrderByDescending(t => t.Discount)
+            .ThenByDescending(t => t.Price)
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize)
+            .AsNoTracking()
+            .ToListAsync();
+
+        ViewBag.Categories = await _tourRepo.GetAllQueryable()
+            .Select(t => t.Category)
+            .Distinct()
+            .ToListAsync();
+
+        ViewBag.Title = "Tours Ưu đãi";
+        ViewBag.Search = search;
+        ViewBag.Category = category;
+        ViewBag.DepartureDate = departureDate?.ToString("yyyy-MM-dd");
+        ViewBag.MinPrice = minPrice;
+        ViewBag.MaxPrice = maxPrice;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / PageSize);
+
+        return View("Deals", tours);
+    }
+
+    // ======================== NỔI BẬT (FEATURED) ========================
+    // Kết hợp chất lượng (Bayesian rating) + phổ biến (log số vé đã thanh toán)
+    public async Task<IActionResult> Featured(
+        string? search,
+        string? category,
+        DateTime? departureDate,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int page = 1)
+    {
+        // μ: trung bình rating toàn site
+        double mu = await _ratingRepo.GetAllQueryable().AnyAsync()
+            ? await _ratingRepo.GetAllQueryable().AverageAsync(r => (double)r.Score)
+            : 4.2; // fallback
+
+        const int C = 20; // prior cho Bayes
+
+        var baseQ = _tourRepo.GetAllQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+            baseQ = baseQ.Where(t => t.TourName.Contains(search) || t.Destination.Contains(search));
+
+        if (!string.IsNullOrWhiteSpace(category) && category != "Tất cả")
+            baseQ = baseQ.Where(t => t.Category == category);
+
+        if (departureDate.HasValue)
+        {
+            var d = DateOnly.FromDateTime(departureDate.Value);
+            baseQ = baseQ.Where(t => t.TourStartDate <= d && t.TourEndDate >= d);
+        }
+
+        if (minPrice.HasValue) baseQ = baseQ.Where(t => t.Price >= minPrice.Value);
+        if (maxPrice.HasValue) baseQ = baseQ.Where(t => t.Price <= maxPrice.Value);
+
+        // Lấy dữ liệu cần thiết
+        var data = await baseQ
+            .Select(t => new
+            {
+                Tour = t,
+                RatingAvg = t.Ratings.Any() ? t.Ratings.Average(r => (double)r.Score) : 0.0,
+                RatingCount = t.Ratings.Count(),
+                OrdersPaid = t.Tickets.Count(k => k.IsPayed)
+            })
+            .AsNoTracking()
+            .ToListAsync();
+
+        // Chuẩn hoá Popularity bằng log(1+OrdersPaid)
+        double maxLogOrders = data.Count > 0
+            ? data.Select(x => Math.Log(1 + x.OrdersPaid)).DefaultIfEmpty(0).Max()
+            : 0.0;
+
+        var scored = data.Select(x =>
+        {
+            // Quality [0..1] từ Bayes rating
+            double bayes = (x.RatingCount * x.RatingAvg + C * mu) / (x.RatingCount + C);
+            // đảm bảo bayes trong [1,5] nếu thiếu dữ liệu
+            bayes = Math.Min(5.0, Math.Max(1.0, bayes));
+            double quality = (bayes - 1.0) / 4.0;
+
+            // Popularity [0..1] từ log orders
+            double popRaw = Math.Log(1 + x.OrdersPaid);
+            double popNorm = maxLogOrders > 0 ? (popRaw / maxLogOrders) : 0.0;
+
+            // Hợp nhất (ưu tiên chất lượng)
+            double score = 0.6 * quality + 0.4 * popNorm;
+
+            return new { x.Tour, Score = score, Quality = quality, Popularity = popNorm };
+        })
+        .OrderByDescending(z => z.Score)
+        .ThenByDescending(z => z.Popularity)
+        .ThenByDescending(z => z.Quality)
+        .ToList();
+
+        var totalItems = scored.Count;
+        var pageItems = scored
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize)
+            .Select(z => z.Tour)
+            .ToList();
+
+        ViewBag.Categories = await _tourRepo.GetAllQueryable()
+            .Select(t => t.Category)
+            .Distinct()
+            .ToListAsync();
+
+        ViewBag.Title = "Tours Nổi bật";
+        ViewBag.Search = search;
+        ViewBag.Category = category;
+        ViewBag.DepartureDate = departureDate?.ToString("yyyy-MM-dd");
+        ViewBag.MinPrice = minPrice;
+        ViewBag.MaxPrice = maxPrice;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / PageSize);
+
+        return View("Featured", pageItems);
     }
 
     // ======================== DETAIL + RATINGS ========================
