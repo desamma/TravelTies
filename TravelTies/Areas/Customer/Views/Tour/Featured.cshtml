@@ -1,0 +1,134 @@
+﻿@model List<Models.Models.Tour>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Nổi bật";
+    // Danh mục
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    if (!categories.Contains("Tất cả")) { categories.Insert(0, "Tất cả"); }
+
+    // Paging
+    var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+
+    // Action phân trang hiện tại
+    var actionName = (ViewBag.ActionName as string) ?? "Featured";
+
+    // Filter values
+    string? search = ViewBag.Search as string;
+    string? category = ViewBag.Category as string;
+    string? departureDate = ViewBag.DepartureDate as string; // yyyy-MM-dd
+    var minPrice = ViewBag.MinPrice;
+    var maxPrice = ViewBag.MaxPrice;
+}
+
+<!-- Hero Banner: giữ NGUYÊN như Index -->
+<section class="w-full bg-blue-600 text-white py-16 px-4">
+    <div class="container mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Khám phá tất cả Tours</h1>
+        <p class="text-xl text-white/90 max-w-2xl mx-auto">
+            Hơn 11 tour đa dạng từ ngắn ngày đến dài hạn, từ tiết kiệm đến luxury. Cùng khám phá Việt Nam với Travel Ties
+        </p>
+    </div>
+</section>
+
+<div class="container mx-auto px-4 py-8 min-h-screen">
+    <!-- Filters: clone 1:1 Index -->
+    <div class="flex flex-col lg:flex-row gap-6 mb-6">
+        <form class="lg:w-1/4 bg-white shadow p-4 rounded-lg space-y-4" method="get">
+            <!-- Search -->
+            <div>
+                <label class="text-sm font-medium text-black">Tìm kiếm</label>
+                <input type="text" name="search" value="@search"
+                       class="input input-bordered w-full mt-1 bg-white text-black"
+                       placeholder="Tên tour hoặc địa điểm." />
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label class="text-sm font-medium text-black">Loại hình</label>
+                <select name="category" class="select select-bordered w-full mt-1 bg-white text-black">
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat" selected="@(cat == category ? "selected" : null)">@cat</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Departure Date -->
+            <div>
+                <label class="text-sm font-medium text-black">Ngày khởi hành</label>
+                <input type="date" name="departureDate" value="@departureDate"
+                       class="input input-bordered w-full mt-1 bg-white text-black" />
+            </div>
+
+            <!-- Price range -->
+            <div>
+                <label class="text-sm font-medium text-black">Khoảng giá</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="number" name="minPrice" value="@(minPrice ?? "")" min="0"
+                           class="input input-bordered w-full bg-white text-black" placeholder="Giá thấp nhất" />
+                    <input type="number" name="maxPrice" value="@(maxPrice ?? "")" min="0"
+                           class="input input-bordered w-full bg-white text-black" placeholder="Giá cao nhất" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full bg-white text-black hover:bg-green-500">Lọc</button>
+        </form>
+
+        <!-- Tours Grid: clone Index -->
+        <div class="lg:w-3/4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            @foreach (var tour in Model)
+            {
+                var discount = (tour.Discount > 0) ? Math.Round((double)tour.Discount) : 0;
+                <div class="card bg-white shadow hover:shadow-lg cursor-pointer">
+                    <figure class="relative">
+                        <img src="@(Url.Content(tour.Picture) ?? Url.Content("https://res.cloudinary.com/dyos46hhp/image/upload/v1759077575/banahill_a1g6hi.webp"))"
+                             class="h-48 w-full object-cover" alt="@tour.TourName" />
+                        @if (!string.IsNullOrEmpty(tour.Category))
+                        {
+                            <div class="absolute top-2 left-2 badge badge-secondary">@tour.Category</div>
+                        }
+                        @if (discount > 0)
+                        {
+                            <div class="absolute bottom-2 left-2 badge badge-error">Giảm @discount%</div>
+                        }
+                    </figure>
+                    <div class="card-body p-4">
+                        <h2 class="card-title text-lg line-clamp-2 text-black">@tour.TourName</h2>
+                        <p class="text-sm text-gray-700">@tour.Destination</p>
+                        <div class="flex justify-between mt-2">
+                            <span class="badge badge-outline bg-blue-300 text-blue-700">@tour.TourStartDate.ToString("dd/MM/yyyy")</span>
+                            <span class="font-bold text-blue-700">@tour.Price.ToString("C0", CultureInfo.GetCultureInfo("vi-VN"))</span>
+                        </div>
+                        <div class="card-actions mt-4">
+                            <a asp-area="Customer" asp-controller="Tour" asp-action="Detail" asp-route-id="@tour.TourId"
+                               class="btn btn-outline btn-sm w-full bg-white text-black">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Pagination: dùng Tag Helpers để tránh dynamic -->
+    @if (totalPages > 1)
+    {
+        <div class="flex justify-center mt-8 space-x-2">
+            @for (var i = 1; i <= totalPages; i++)
+            {
+                <a asp-area="Customer"
+                   asp-controller="Tour"
+                   asp-action="@actionName"
+                   asp-route-page="@i"
+                   asp-route-search="@(search ?? string.Empty)"
+                   asp-route-category="@(category ?? string.Empty)"
+                   asp-route-departureDate="@(departureDate ?? string.Empty)"
+                   asp-route-minPrice="@(minPrice ?? null)"
+                   asp-route-maxPrice="@(maxPrice ?? null)"
+                   class="btn btn-sm @(currentPage == i ? "btn-primary" : "btn-outline")">
+                    @i
+                </a>
+            }
+        </div>
+    }
+</div>
