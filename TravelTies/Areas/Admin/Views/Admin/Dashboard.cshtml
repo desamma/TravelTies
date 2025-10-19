@@ -1,150 +1,102 @@
-@model TravelTies.Areas.Admin.ViewModels.DashboardViewModel
+@model DashboardViewModel
 @{
-    ViewData["Title"] = "Admin Dashboard";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+    Layout = "_AdminLayout";
 }
 
 <div class="space-y-6">
-    <!-- Header -->
+    <!-- Page Header -->
     <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p class="text-gray-600 mt-1">Welcome to the admin panel</p>
-        </div>
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div class="text-sm text-gray-500">
-            <i class="fas fa-clock"></i> @DateTime.Now.ToString("dd MMM yyyy, HH:mm")
+            <i class="fas fa-calendar"></i> @DateTime.Now.ToString("MMMM dd, yyyy")
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Total Users Card -->
-        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-black shadow-lg hover:shadow-xl transition-shadow">
+        <div class="card bg-white shadow-md">
             <div class="card-body">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-blue-100 text-sm font-medium">Total Users</p>
-                        <h3 class="text-3xl font-bold mt-2">@Model.TotalUsers.ToString("N0")</h3>
-                        <p class="text-blue-100 text-xs mt-2">
-                            <i class="fas fa-arrow-up"></i> +@Model.UserGrowthPercentage% from last month
+                        <p class="text-sm text-gray-600">Total Users</p>
+                        <h3 class="text-3xl font-bold text-gray-900">@Model.TotalUsers.ToString("N0")</h3>
+                        <p class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-arrow-up"></i> @Model.UserGrowthPercentage% this month
                         </p>
                     </div>
-                    <div class="text-5xl opacity-20">
-                        <i class="fas fa-users"></i>
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-3xl text-blue-600"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Total Companies Card -->
-        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-black shadow-lg hover:shadow-xl transition-shadow">
+        <div class="card bg-white shadow-md">
             <div class="card-body">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-green-100 text-sm font-medium">Total Companies</p>
-                        <h3 class="text-3xl font-bold mt-2">@Model.TotalCompanies.ToString("N0")</h3>
-                        <p class="text-green-100 text-xs mt-2">
-                            <i class="fas fa-building"></i> Active partners
-                        </p>
+                        <p class="text-sm text-gray-600">Total Companies</p>
+                        <h3 class="text-3xl font-bold text-gray-900">@Model.TotalCompanies.ToString("N0")</h3>
+                        <p class="text-sm text-gray-500 mt-1">Active partners</p>
                     </div>
-                    <div class="text-5xl opacity-20">
-                        <i class="fas fa-building"></i>
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-building text-3xl text-green-600"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Growth Card -->
-        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-black shadow-lg hover:shadow-xl transition-shadow">
+        <!-- Monthly Revenue Card -->
+        <div class="card bg-white shadow-md">
             <div class="card-body">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-purple-100 text-sm font-medium">User Growth</p>
-                        <h3 class="text-3xl font-bold mt-2">@Model.UserGrowthPercentage%</h3>
-                        <p class="text-purple-100 text-xs mt-2">
-                            <i class="fas fa-chart-line"></i> Monthly increase
-                        </p>
+                        <p class="text-sm text-gray-600">This Month Revenue</p>
+                        <h3 class="text-3xl font-bold text-gray-900">@Model.MonthlyRevenue.LastOrDefault().ToString("N0")đ</h3>
+                        <p class="text-sm text-gray-500 mt-1">Total earnings</p>
                     </div>
-                    <div class="text-5xl opacity-20">
-                        <i class="fas fa-chart-line"></i>
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-3xl text-purple-600"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts and Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Charts and Activities Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Revenue Chart -->
-        <div class="card bg-white shadow-lg">
+        <div class="lg:col-span-2 card bg-white shadow-md">
             <div class="card-body">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                    <i class="fas fa-chart-bar text-blue-600"></i> Monthly Revenue @DateTime.Now.Year
-                </h3>
-                <div class="h-80">
-                    <canvas id="revenueChart"></canvas>
-                </div>
+                <h2 class="card-title text-xl mb-4">Revenue Overview (@DateTime.Now.Year)</h2>
+                <canvas id="revenueChart" class="w-full" style="max-height: 300px;"></canvas>
             </div>
         </div>
 
-        <!-- Activity Tracker -->
-        <div class="card bg-white shadow-lg">
+        <!-- Recent Activities -->
+        <div class="card bg-white shadow-md">
             <div class="card-body">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                    <i class="fas fa-history text-green-600"></i> Recent Activities
-                </h3>
-                <div class="overflow-y-auto" style="max-height: 350px;">
-                    @if (!Model.RecentActivities.Any())
+                <h2 class="card-title text-xl mb-4">Recent Activities</h2>
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    @foreach (var activity in Model.RecentActivities)
                     {
-                        <div class="text-center text-gray-500 py-8">
-                            <i class="fas fa-inbox text-4xl mb-2"></i>
-                            <p>No recent activities</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="space-y-3">
-                            @foreach (var activity in Model.RecentActivities)
-                            {
-                                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center @activity.Color">
-                                            <i class="fas @activity.Icon"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900">@activity.Type</p>
-                                        <p class="text-sm text-gray-600 truncate">@activity.Description</p>
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            <i class="fas fa-clock"></i> @activity.Timestamp.ToString("dd/MM/yyyy HH:mm")
-                                        </p>
-                                    </div>
-                                </div>
-                            }
+                        <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition">
+                            <div class="flex-shrink-0">
+                                <i class="fas @activity.Icon @activity.Color text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">@activity.Type</p>
+                                <p class="text-xs text-gray-500">@activity.Description</p>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    <i class="far fa-clock"></i> @activity.Timestamp.ToString("MMM dd, HH:mm")
+                                </p>
+                            </div>
                         </div>
                     }
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="card bg-white shadow-lg">
-        <div class="card-body">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a asp-action="Users" class="btn btn-outline hover:btn-primary">
-                    <i class="fas fa-users"></i> Manage Users
-                </a>
-                <a asp-action="Companies" class="btn btn-outline hover:btn-success">
-                    <i class="fas fa-building"></i> Manage Companies
-                </a>
-                <a asp-action="Tours" class="btn btn-outline hover:btn-info">
-                    <i class="fas fa-map-marked-alt"></i> Manage Tours
-                </a>
-                <a asp-action="CreateCompany" class="btn btn-outline hover:btn-warning">
-                    <i class="fas fa-plus"></i> Create Company
-                </a>
             </div>
         </div>
     </div>
@@ -153,18 +105,19 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('revenueChart');
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthLabels)),
                 datasets: [{
-                    label: 'Revenue (VND)',
+                    label: 'Revenue (VNĐ)',
                     data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenue)),
-                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 2,
-                    borderRadius: 8
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {
@@ -172,18 +125,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Revenue: ' + new Intl.NumberFormat('vi-VN', { 
-                                    style: 'currency', 
-                                    currency: 'VND' 
-                                }).format(context.parsed.y);
-                            }
-                        }
+                        display: false
                     }
                 },
                 scales: {
@@ -191,10 +133,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN', { 
-                                    notation: 'compact', 
-                                    compactDisplay: 'short' 
-                                }).format(value);
+                                return value.toLocaleString() + 'đ';
                             }
                         }
                     }

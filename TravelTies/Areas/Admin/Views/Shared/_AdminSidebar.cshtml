@@ -1,0 +1,94 @@
+@* Views/Shared/_AdminSidebar.cshtml *@
+@* No model required for now *@
+
+<!-- Sidebar partial: drawer-side -->
+<div class="drawer-side">
+    <label for="admin-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+
+    <aside class="bg-white w-72 min-h-screen border-r shadow-lg">
+        <!-- Logo -->
+        <div class="p-6 border-b">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">
+                    <i class="fas fa-shield-alt text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Travel Ties</h1>
+                    <p class="text-xs text-gray-500">Admin Control</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <ul class="menu p-4 space-y-1">
+            <li class="menu-title">
+                <span class="text-gray-600">MAIN MENU</span>
+            </li>
+
+            <li>
+                <a asp-area="Admin" asp-controller="Admin" asp-action="Dashboard" 
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "sidebar-active" : "")">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="menu-title mt-4">
+                <span class="text-gray-600">MANAGEMENT</span>
+            </li>
+
+            <li>
+                <a asp-area="Admin" asp-controller="Admin" asp-action="Users"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "sidebar-active" : "")">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+
+            <li>
+                <a asp-area="Admin" asp-controller="Admin" asp-action="Companies"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Companies" || ViewContext.RouteData.Values["action"]?.ToString() == "CreateCompany" ? "sidebar-active" : "")">
+                    <i class="fas fa-building w-5"></i>
+                    <span>Companies</span>
+                </a>
+            </li>
+
+            <li>
+                <a asp-area="Admin" asp-controller="Admin" asp-action="Tours"
+                   class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Tours" ? "sidebar-active" : "")">
+                    <i class="fas fa-map-marked-alt w-5"></i>
+                    <span>Tours</span>
+                </a>
+            </li>
+
+            <li class="menu-title mt-4">
+                <span class="text-gray-600">QUICK ACTIONS</span>
+            </li>
+
+            <li>
+                <a asp-area="Admin" asp-controller="Admin" asp-action="CreateCompany">
+                    <i class="fas fa-plus-circle w-5"></i>
+                    <span>Create Company</span>
+                </a>
+            </li>
+
+            <li class="menu-title mt-4">
+                <span class="text-gray-600">SYSTEM</span>
+            </li>
+
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-globe w-5"></i>
+                    <span>View Website</span>
+                </a>
+            </li>
+
+            <li>
+                <a asp-area="Identity" asp-controller="Auth" asp-action="Logout">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+</div>

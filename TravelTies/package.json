@@ -1,17 +1,15 @@
 {
   "name": "travelties",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "css:build": "npx @tailwindcss/cli -i ./wwwroot/css/tailwind.css -o ./wwwroot/css/site.css --minify"
+    "build": "tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/site.css --minify",
+    "watch": "tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/site.css --watch"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.8",
-    "daisyui": "^5.0.43",
-    "tailwindcss": "^4.1.8"
+    "autoprefixer": "^10.4.20",
+    "daisyui": "^4.12.13",
+    "postcss": "^8.4.41",
+    "tailwindcss": "4.1.14"
   }
 }
