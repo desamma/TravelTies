@@ -35,7 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Admin\" />
     <Folder Include="Areas\Billing\" />
     <Folder Include="Areas\Chat\" />
     <Folder Include="Areas\Customer\Views\Shared\" />

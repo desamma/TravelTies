@@ -1,0 +1,195 @@
+@model TravelTies.Areas.Admin.ViewModels.CreateCompanyViewModel
+@{
+    ViewData["Title"] = "Create Company";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Create New Company</h1>
+            <p class="text-gray-600 mt-1">Add a new company partner to the system</p>
+        </div>
+        <a asp-action="Companies" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Companies
+        </a>
+    </div>
+
+    <!-- Create Form -->
+    <div class="card bg-white shadow-lg max-w-4xl mx-auto">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" asp-action="CreateCompany">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-error mb-4"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Company Name -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-building text-primary"></i> Company Name *
+                            </span>
+                        </label>
+                        <input asp-for="UserName" 
+                               type="text" 
+                               placeholder="Enter company name" 
+                               class="input input-bordered bg-white" 
+                               required />
+                        <span asp-validation-for="UserName" class="text-error text-sm mt-1"></span>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-envelope text-primary"></i> Email *
+                            </span>
+                        </label>
+                        <input asp-for="Email" 
+                               type="email" 
+                               placeholder="company@example.com" 
+                               class="input input-bordered bg-white" 
+                               required />
+                        <span asp-validation-for="Email" class="text-error text-sm mt-1"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-lock text-primary"></i> Password *
+                            </span>
+                        </label>
+                        <input asp-for="Password" 
+                               type="password" 
+                               placeholder="Min 6 characters" 
+                               class="input input-bordered bg-white" 
+                               required />
+                        <span asp-validation-for="Password" class="text-error text-sm mt-1"></span>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-lock text-primary"></i> Confirm Password *
+                            </span>
+                        </label>
+                        <input asp-for="ConfirmPassword" 
+                               type="password" 
+                               placeholder="Repeat password" 
+                               class="input input-bordered bg-white" 
+                               required />
+                        <span asp-validation-for="ConfirmPassword" class="text-error text-sm mt-1"></span>
+                    </div>
+
+                    <!-- Created Date -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-calendar text-primary"></i> Company Created Date
+                            </span>
+                        </label>
+                        <input asp-for="CompanyCreatedDate" 
+                               type="date" 
+                               class="input input-bordered bg-white" />
+                        <span asp-validation-for="CompanyCreatedDate" class="text-error text-sm mt-1"></span>
+                    </div>
+
+                    <!-- Avatar Upload -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-image text-primary"></i> Company Logo
+                            </span>
+                        </label>
+                        <input asp-for="AvatarFile" 
+                               type="file" 
+                               accept="image/*"
+                               class="file-input file-input-bordered bg-white w-full" />
+                        <span asp-validation-for="AvatarFile" class="text-error text-sm mt-1"></span>
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">
+                                Supported: JPG, PNG, GIF, WEBP
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-control md:col-span-2">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-address-card text-primary"></i> Contact Information
+                            </span>
+                        </label>
+                        <textarea asp-for="ContactInfo" 
+                                  rows="3"
+                                  placeholder="Phone, address, website, etc." 
+                                  class="textarea textarea-bordered bg-white"></textarea>
+                        <span asp-validation-for="ContactInfo" class="text-error text-sm mt-1"></span>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-control md:col-span-2">
+                        <label class="label">
+                            <span class="label-text font-medium">
+                                <i class="fas fa-info-circle text-primary"></i> Company Description
+                            </span>
+                        </label>
+                        <textarea asp-for="Description" 
+                                  rows="4"
+                                  placeholder="About the company, services offered, etc." 
+                                  class="textarea textarea-bordered bg-white"></textarea>
+                        <span asp-validation-for="Description" class="text-error text-sm mt-1"></span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 justify-end mt-6 pt-6 border-t">
+                    <a asp-action="Companies" class="btn btn-outline">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Create Company
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="alert alert-info max-w-4xl mx-auto">
+        <i class="fas fa-info-circle text-lg"></i>
+        <div>
+            <h3 class="font-bold">Important Information</h3>
+            <div class="text-sm">
+                <ul class="list-disc list-inside mt-2">
+                    <li>The company will be assigned the "Company" role automatically</li>
+                    <li>Email must be unique and will be used for login</li>
+                    <li>Password must be at least 6 characters long</li>
+                    <li>Company logo will be uploaded to Cloudinary</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Preview avatar before upload
+        document.querySelector('input[name="AvatarFile"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // You can add image preview logic here
+                    console.log('Image selected:', file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Travel Ties Admin</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar-active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            font-weight: 600;
+        }
+        
+        body {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="drawer lg:drawer-open">
+        <input id="admin-drawer" type="checkbox" class="drawer-toggle" />
+        
+        <!-- Main Content -->
+        <div class="drawer-content flex flex-col">
+            <!-- Top Navbar -->
+            <div class="w-full navbar bg-white shadow-sm border-b">
+                <div class="flex-none lg:hidden">
+                    <label for="admin-drawer" class="btn btn-square btn-ghost">
+                        <i class="fas fa-bars text-xl"></i>
+                    </label>
+                </div>
+                
+                <div class="flex-1 px-4">
+                    <a href="/" class="text-xl font-bold text-primary">
+                        <i class="fas fa-shield-alt"></i> Admin Panel
+                    </a>
+                </div>
+
+                <div class="flex-none gap-2">
+                    <!-- Notifications -->
+                    <div class="dropdown dropdown-end">
+                        <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+                            <div class="indicator">
+                                <i class="fas fa-bell text-lg"></i>
+                                <span class="badge badge-xs badge-primary indicator-item"></span>
+                            </div>
+                        </div>
+                        <div tabindex="0" class="mt-3 z-[1] card card-compact dropdown-content w-72 bg-base-100 shadow-xl">
+                            <div class="card-body">
+                                <h3 class="font-bold text-lg">Notifications</h3>
+                                <p class="text-sm text-gray-500">No new notifications</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Menu -->
+                    <div class="dropdown dropdown-end">
+                        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                            <div class="w-10 rounded-full">
+                                <img src="~/images/defaultAvatar.png" alt="Admin" />
+                            </div>
+                        </div>
+                        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                            <li class="menu-title">
+                                <span>@User.Identity?.Name</span>
+                            </li>
+                            <li><a asp-area="" asp-controller="Home" asp-action="Index"><i class="fas fa-home"></i> Go to Site</a></li>
+                            <li><a asp-area="Identity" asp-controller="Auth" asp-action="Logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success shadow-lg mb-6">
+                        <i class="fas fa-check-circle text-xl"></i>
+                        <span>@TempData["Success"]</span>
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-error shadow-lg mb-6">
+                        <i class="fas fa-exclamation-circle text-xl"></i>
+                        <span>@TempData["Error"]</span>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer footer-center p-4 bg-white text-base-content border-t mt-auto">
+                <aside>
+                    <p>© @DateTime.Now.Year Travel Ties Admin Panel - All rights reserved</p>
+                </aside>
+            </footer>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="drawer-side">
+            <label for="admin-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+            <aside class="bg-white w-72 min-h-full border-r shadow-lg">
+                <!-- Logo -->
+                <div class="p-6 border-b">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">
+                            <i class="fas fa-shield-alt text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Travel Ties</h1>
+                            <p class="text-xs text-gray-500">Admin Control</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Menu -->
+                <ul class="menu p-4 space-y-1">
+                    <li class="menu-title">
+                        <span class="text-gray-600">MAIN MENU</span>
+                    </li>
+
+                    <li>
+                        <a asp-area="Admin" asp-controller="Admin" asp-action="Dashboard" 
+                           class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "sidebar-active" : "")">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-title mt-4">
+                        <span class="text-gray-600">MANAGEMENT</span>
+                    </li>
+
+                    <li>
+                        <a asp-area="Admin" asp-controller="Admin" asp-action="Users"
+                           class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "sidebar-active" : "")">
+                            <i class="fas fa-users w-5"></i>
+                            <span>Users</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-area="Admin" asp-controller="Admin" asp-action="Companies"
+                           class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Companies" || ViewContext.RouteData.Values["action"]?.ToString() == "CreateCompany" ? "sidebar-active" : "")">
+                            <i class="fas fa-building w-5"></i>
+                            <span>Companies</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-area="Admin" asp-controller="Admin" asp-action="Tours"
+                           class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Tours" ? "sidebar-active" : "")">
+                            <i class="fas fa-map-marked-alt w-5"></i>
+                            <span>Tours</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-title mt-4">
+                        <span class="text-gray-600">QUICK ACTIONS</span>
+                    </li>
+
+                    <li>
+                        <a asp-area="Admin" asp-controller="Admin" asp-action="CreateCompany">
+                            <i class="fas fa-plus-circle w-5"></i>
+                            <span>Create Company</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-title mt-4">
+                        <span class="text-gray-600">SYSTEM</span>
+                    </li>
+
+                    <li>
+                        <a asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-globe w-5"></i>
+                            <span>View Website</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-area="Identity" asp-controller="Auth" asp-action="Logout">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

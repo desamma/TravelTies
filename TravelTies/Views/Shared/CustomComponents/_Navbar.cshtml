@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Identity
 @using Models.Models
+@using Utilities.Constants
 @inject SignInManager<User> SignInManager
 @inject IHttpContextAccessor Accessor
 @inject UserManager<User> UserManager
@@ -43,10 +44,8 @@
                class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
                 <i class="far fa-star mr-1"></i> Nổi bật
             </a>
-
             <a href="/support" class="text-sm font-medium text-gray-700 hover:text-green-500">Hỗ trợ</a>
         </div>
-
 
         <!-- Right Actions -->
         <div class="flex items-center space-x-4">
@@ -57,7 +56,8 @@
 
             @if (SignInManager.IsSignedIn(User))
             {
-                var isCompany = User.IsInRole("company"); // or your logic to detect company
+                var isCompany = User.IsInRole(RoleConstants.Company);
+                var isAdmin = User.IsInRole(RoleConstants.Admin);
 
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -65,12 +65,16 @@
                             <img src="@(currentUser?.UserAvatar ?? @Url.Content("images/default-avatar.png"))" alt="@currentUser?.UserName" />
                         </div>
                     </div>
-                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white text-black rounded-box w-52">
                         <li class="menu-title flex items-center gap-2">
                             <span>@currentUser?.UserName</span>
                             @if (isCompany)
                             {
                                 <span class="badge badge-primary badge-sm">Company</span>
+                            }
+                            else if (isAdmin)
+                            {
+                                <span class="badge badge-warning badge-sm">Admin</span>
                             }
                             else
                             {
@@ -81,6 +85,10 @@
                         {
                             <li><a asp-area="Company" asp-action="Index" asp-controller="Company">Đại lí của bạn</a></li>
                             <li><a asp-area="Company" asp-action="CompanyProfile" asp-controller="Company">Hồ sơ đại lí</a></li>
+                        }
+                        else if (isAdmin)
+                        {
+                            <li><a asp-area="Customer" asp-controller="Admin" asp-action="Dashboard">Trở về Admin Control</a></li>
                         }
                         else
                         {

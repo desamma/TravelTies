@@ -26,9 +26,11 @@ namespace Utilities.Utils
             var adminEmail = "admin@gmail.com";
             var adminPassword = "123123";
             var companyEmail = "company@gmail.com";
+            var userEmail = "user@gmail.com";
 
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             var companyUser = await userManager.FindByEmailAsync(companyEmail);
+            var userUser = await userManager.FindByEmailAsync(userEmail);
             if (adminUser == null)
             {
                 adminUser = new User
@@ -60,6 +62,24 @@ namespace Utilities.Utils
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(companyUser, "company");
+                }
+            }
+
+            if (userUser == null)
+            {
+                userUser = new User
+                {
+                    UserName = "User",
+                    Email = userEmail,
+                    EmailConfirmed = true,
+                    IsBanned = false,
+                    IsCompany = true
+                };
+                var result = await userManager.CreateAsync(userUser, adminPassword);
+
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(userUser, "user");
                 }
             }
         }
