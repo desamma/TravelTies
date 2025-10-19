@@ -1,0 +1,289 @@
+@model TravelTies.Areas.Admin.ViewModels.TourManagementViewModel
+@{
+    ViewData["Title"] = "Tour Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Tour Management</h1>
+            <p class="text-gray-600 mt-1">Manage all tours across the platform</p>
+        </div>
+        <div class="badge badge-lg badge-info">
+            Total: @Model.TotalCount tours
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card bg-white shadow-lg">
+        <div class="card-body">
+            <form method="get" asp-action="Tours" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">Search Tour Name</span>
+                        </label>
+                        <input type="text" name="search" value="@Model.SearchTerm" 
+                               placeholder="Tour name..." 
+                               class="input input-bordered bg-white" />
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">Category</span>
+                        </label>
+                        <select name="category" class="select select-bordered bg-white">
+                            <option value="">All Categories</option>
+                            @foreach (var cat in Model.Categories)
+                            {
+                                <option value="@cat" selected="@(Model.SelectedCategory == cat)">@cat</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Date From -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">From Date</span>
+                        </label>
+                        <input type="date" name="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")" 
+                               class="input input-bordered bg-white" />
+                    </div>
+
+                    <!-- Date To -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">To Date</span>
+                        </label>
+                        <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" 
+                               class="input input-bordered bg-white" />
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a asp-action="Tours" class="btn btn-outline">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tours Table -->
+    <div class="card bg-white shadow-lg">
+        <div class="card-body overflow-x-auto">
+            @if (!Model.Tours.Any())
+            {
+                <div class="text-center py-12">
+                    <i class="fas fa-map-marked-alt text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500 text-lg">No tours found</p>
+                </div>
+            }
+            else
+            {
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th class="bg-gray-100">Image</th>
+                            <th class="bg-gray-100">Tour Name</th>
+                            <th class="bg-gray-100">Company</th>
+                            <th class="bg-gray-100">Category</th>
+                            <th class="bg-gray-100">Destination</th>
+                            <th class="bg-gray-100">Dates</th>
+                            <th class="bg-gray-100">Capacity</th>
+                            <th class="bg-gray-100">Price</th>
+                            <th class="bg-gray-100">Discount</th>
+                            <th class="bg-gray-100">Hotel</th>
+                            <th class="bg-gray-100">Matching</th>
+                            <th class="bg-gray-100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tour in Model.Tours)
+                        {
+                            <tr class="hover">
+                                <td>
+                                    <div class="avatar">
+                                        <div class="w-16 h-16 rounded-lg">
+                                            @if (!string.IsNullOrEmpty(tour.Picture))
+                                            {
+                                                var firstImage = tour.Picture.Split(',')[0].Trim();
+                                                <img src="@firstImage" alt="@tour.TourName" class="object-cover" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-gray-200 w-full h-full flex items-center justify-center">
+                                                    <i class="fas fa-image text-gray-400"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a asp-area="Customer" 
+                                       asp-controller="Tour" 
+                                       asp-action="Detail" 
+                                       asp-route-id="@tour.TourId"
+                                       class="font-medium text-primary hover:underline"
+                                       target="_blank">
+                                        @tour.TourName
+                                    </a>
+                                    @if (tour.Sale > 0)
+                                    {
+                                        <div class="badge badge-sm badge-error">Sale @tour.Sale%</div>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="text-sm">
+                                        @(tour.Company?.UserName ?? "N/A")
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(tour.Category))
+                                    {
+                                        <span class="badge badge-secondary">@tour.Category</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="text-sm">
+                                        <i class="fas fa-map-marker-alt text-red-500"></i> @tour.Destination
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-xs">
+                                        <div>Start: @tour.TourStartDate.ToString("dd/MM/yyyy")</div>
+                                        <div>End: @tour.TourEndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <div class="font-bold">@tour.NumberOfPassenger</div>
+                                        <div class="text-xs text-gray-500">people</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-medium">@tour.Price.ToString("N0") đ</div>
+                                </td>
+                                <td>
+                                    @if (tour.Discount > 0)
+                                    {
+                                        <span class="badge badge-warning">@tour.Discount%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="rating rating-sm">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <input type="radio" 
+                                                   class="mask mask-star-2 bg-orange-400" 
+                                                   checked="@(i == tour.HotelStars)"
+                                                   disabled />
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (tour.SupportTourMatching)
+                                    {
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check"></i> Yes
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-ghost">No</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="flex gap-2">
+                                        <a asp-area="Customer" 
+                                           asp-controller="Tour" 
+                                           asp-action="Detail" 
+                                           asp-route-id="@tour.TourId"
+                                           class="btn btn-sm btn-info"
+                                           target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <button onclick="confirmDeleteTour('@tour.TourId', '@tour.TourName')" 
+                                                class="btn btn-sm btn-error">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="flex justify-center">
+            <div class="join">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a asp-action="Tours" 
+                       asp-route-page="@i"
+                       asp-route-search="@Model.SearchTerm"
+                       asp-route-category="@Model.SelectedCategory"
+                       asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                       asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                       class="join-item btn @(i == Model.CurrentPage ? "btn-active" : "")">
+                        @i
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Delete Modal -->
+<dialog id="deleteModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg text-error">Confirm Delete Tour</h3>
+        <p class="py-4">
+            Are you sure you want to delete tour: <strong id="deleteTourName" class="text-primary"></strong>?
+            <br/><br/>
+            This action cannot be undone and all associated bookings will be affected.
+        </p>
+        <div class="modal-action">
+            <form id="deleteForm" method="post" asp-action="DeleteTour">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="deleteTourId" name="tourId" />
+                <button type="submit" class="btn btn-error">
+                    <i class="fas fa-trash"></i> Delete Tour
+                </button>
+                <button type="button" class="btn" onclick="deleteModal.close()">Cancel</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        function confirmDeleteTour(tourId, tourName) {
+            const modal = document.getElementById('deleteModal');
+            document.getElementById('deleteTourId').value = tourId;
+            document.getElementById('deleteTourName').textContent = tourName;
+            modal.showModal();
+        }
+    </script>
+}

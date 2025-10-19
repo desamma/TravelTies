@@ -1,0 +1,131 @@
+@* Views/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+   <meta charset="utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>@ViewData["Title"] - Travel Ties Admin</title>
+
+   <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+   @* Optional: small inline style (safe) — keep overlay / media rules in site.css *@
+   <style>
+      .sidebar-active {
+         background-color: rgba(59, 130, 246, 0.1);
+         border-left: 4px solid #3b82f6;
+         font-weight: 600;
+      }
+      body { background-color: #f9fafb; }
+   </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+<div class="drawer lg:drawer-open min-h-screen">
+   @* KEEP the toggle checkbox in the layout so label in the partial can target it *@
+   <input id="admin-drawer" type="checkbox" class="drawer-toggle" />
+
+   <!-- Main Content -->
+   <div class="drawer-content flex flex-col min-h-screen">
+      <!-- small-screen drawer toggle button (hamburger) -->
+      <div class="p-4 lg:hidden">
+         <label for="admin-drawer" class="btn btn-square btn-ghost" aria-label="open sidebar">
+            <i class="fas fa-bars text-xl"></i>
+         </label>
+      </div>
+
+      <!-- Top bar area: if you removed your original large navbar, keep this thin area or
+           re-add what you need here (avatar, notifications, etc). This is optional. -->
+
+      <main class="p-6">
+         @* flash messages *@
+         @if (TempData["Success"] != null)
+         {
+         <div class="alert alert-success shadow-lg mb-6">
+            <i class="fas fa-check-circle text-xl"></i>
+            <span>@TempData["Success"]</span>
+         </div>
+         }
+
+         @if (TempData["Error"] != null)
+         {
+         <div class="alert alert-error shadow-lg mb-6">
+            <i class="fas fa-exclamation-circle text-xl"></i>
+            <span>@TempData["Error"]</span>
+         </div>
+         }
+
+         @RenderBody()
+      </main>
+
+      <footer class="footer footer-center p-4 bg-white text-base-content border-t mt-auto">
+         <aside>
+            <p>© @DateTime.Now.Year Travel Ties Admin Panel - All rights reserved</p>
+         </aside>
+      </footer>
+   </div>
+
+   @* RENDER SIDEBAR PARTIAL HERE (moved out of layout) *@
+   @await Html.PartialAsync("_AdminSidebar")
+</div>
+
+@* Backdrop element (script will toggle body.sidebar-overlay-active); optional because the JS can create it,
+       but having it here is explicit and avoids race conditions. Put overlay CSS in site.css. *@
+<div id="sidebar-backdrop" aria-hidden="true"></div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script>
+   // Sidebar overlay script (move to site.js if you prefer)
+   (function () {
+      const drawerCheckbox = document.getElementById('admin-drawer');
+      if (!drawerCheckbox) return;
+
+      // Ensure there's a backdrop element
+      let backdrop = document.getElementById('sidebar-backdrop');
+      if (!backdrop) {
+         backdrop = document.createElement('div');
+         backdrop.id = 'sidebar-backdrop';
+         document.body.appendChild(backdrop);
+      }
+
+      function setOverlayActive(active) {
+         if (active) {
+            document.body.classList.add('sidebar-overlay-active');
+            drawerCheckbox.checked = true;
+            const sidebarAside = document.querySelector('.drawer-side aside');
+            if (sidebarAside) {
+               sidebarAside.setAttribute('tabindex', '-1');
+               sidebarAside.focus();
+            }
+         } else {
+            document.body.classList.remove('sidebar-overlay-active');
+            drawerCheckbox.checked = false;
+         }
+      }
+
+      // Toggle when checkbox changes (label clicks)
+      drawerCheckbox.addEventListener('change', function () {
+         setOverlayActive(!!drawerCheckbox.checked);
+      });
+
+      // Click backdrop to close
+      backdrop.addEventListener('click', function () {
+         setOverlayActive(false);
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', function (e) {
+         if (e.key === 'Escape' && document.body.classList.contains('sidebar-overlay-active')) {
+            setOverlayActive(false);
+         }
+      });
+
+      // Initialize state on load
+      if (drawerCheckbox.checked) setOverlayActive(true);
+   })();
+</script>
+
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

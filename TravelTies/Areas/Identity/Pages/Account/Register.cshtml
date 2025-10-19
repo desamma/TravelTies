@@ -87,6 +87,21 @@
                        class="input input-bordered bg-white text-black w-full"/>
                 <span asp-validation-for="Input.UserDOB" class="text-red-500 text-sm"></span>
             </div>
+            
+            <div>
+                <label class="block text-gray-700 text-sm font-medium mb-1">Giới tính</label>
+                <div class="flex items-center space-x-6">
+                    <label class="flex items-center space-x-2">
+                        <input type="radio" asp-for="Input.Gender" value="true" class="radio radio-primary" />
+                        <span>Nam</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="radio" asp-for="Input.Gender" value="false" class="radio radio-primary" />
+                        <span>Nữ</span>
+                    </label>
+                </div>
+                <span asp-validation-for="Input.Gender" class="text-red-500 text-sm"></span>
+            </div>
 
             <!-- Submit -->
             <button type="submit" class="btn btn-primary w-full">Đăng ký</button>

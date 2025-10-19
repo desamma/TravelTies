@@ -113,6 +113,8 @@ namespace TravelTies.Areas.Identity.Pages.Account
             [Display(Name = "Date of Birth")]
             [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
             public DateOnly? UserDOB { get; set; } = null;
+            
+            public bool Gender { get; set; }
 
             public bool IsBanned { get; set; } = false;
             public bool IsCompany { get; set; } = false;
@@ -152,6 +154,13 @@ namespace TravelTies.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    // Assign default role
+                    var addRole = await _userManager.AddToRoleAsync(user, RoleConstants.User);
+                    if (!addRole.Succeeded)
+                    {
+                        _logger.LogWarning("Failed to add role to user {Email}: {Errors}", user.Email, string.Join(", ", addRole.Errors.Select(e => e.Description)));
+                    }
+                    
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -193,6 +202,7 @@ namespace TravelTies.Areas.Identity.Pages.Account
             registerUser.UserAvatar = GeneralConstants.DefaultAvatar;
             registerUser.IsCompany = Input.IsCompany;
             registerUser.IsBanned = Input.IsBanned;
+            registerUser.Gender = Input.Gender;
             return registerUser;
         }
 

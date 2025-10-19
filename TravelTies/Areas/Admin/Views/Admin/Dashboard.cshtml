@@ -1,0 +1,144 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <div class="text-sm text-gray-500">
+            <i class="fas fa-calendar"></i> @DateTime.Now.ToString("MMMM dd, yyyy")
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Total Users Card -->
+        <div class="card bg-white shadow-md">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Users</p>
+                        <h3 class="text-3xl font-bold text-gray-900">@Model.TotalUsers.ToString("N0")</h3>
+                        <p class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-arrow-up"></i> @Model.UserGrowthPercentage% this month
+                        </p>
+                    </div>
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-3xl text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Companies Card -->
+        <div class="card bg-white shadow-md">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Companies</p>
+                        <h3 class="text-3xl font-bold text-gray-900">@Model.TotalCompanies.ToString("N0")</h3>
+                        <p class="text-sm text-gray-500 mt-1">Active partners</p>
+                    </div>
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-building text-3xl text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Revenue Card -->
+        <div class="card bg-white shadow-md">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">This Month Revenue</p>
+                        <h3 class="text-3xl font-bold text-gray-900">@Model.MonthlyRevenue.LastOrDefault().ToString("N0")đ</h3>
+                        <p class="text-sm text-gray-500 mt-1">Total earnings</p>
+                    </div>
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-3xl text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Activities Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Revenue Chart -->
+        <div class="lg:col-span-2 card bg-white shadow-md">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Revenue Overview (@DateTime.Now.Year)</h2>
+                <canvas id="revenueChart" class="w-full" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="card bg-white shadow-md">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Recent Activities</h2>
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    @foreach (var activity in Model.RecentActivities)
+                    {
+                        <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition">
+                            <div class="flex-shrink-0">
+                                <i class="fas @activity.Icon @activity.Color text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">@activity.Type</p>
+                                <p class="text-xs text-gray-500">@activity.Description</p>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    <i class="far fa-clock"></i> @activity.Timestamp.ToString("MMM dd, HH:mm")
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthLabels)),
+                datasets: [{
+                    label: 'Revenue (VNĐ)',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenue)),
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + 'đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

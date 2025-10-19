@@ -39,7 +39,7 @@ public class Tour
     [MaxLength(200)]
     public string Destination { get; set; } = string.Empty;
     
-    [Range(1, 5)]
+    [Range(0, 5)]
     public int HotelStars { get; set; } // hotel star rating
     
     [Range(0, double.MaxValue)]

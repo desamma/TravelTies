@@ -35,7 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Admin\" />
     <Folder Include="Areas\Billing\" />
     <Folder Include="Areas\Chat\" />
     <Folder Include="Areas\Customer\Views\Shared\" />
@@ -77,7 +76,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<UpToDateCheckBuilt Include="wwwroot/css/site.css" Set="Css" />
 		<UpToDateCheckBuilt Include="tailwind.config.js" Set="Css" />
 	</ItemGroup>
 

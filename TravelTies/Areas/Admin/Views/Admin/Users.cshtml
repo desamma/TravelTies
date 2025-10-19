@@ -1,0 +1,254 @@
+@model TravelTies.Areas.Admin.ViewModels.UserManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+            <p class="text-gray-600 mt-1">Manage all registered users</p>
+        </div>
+        <div class="badge badge-lg badge-primary">
+            Total: @Model.TotalCount users
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card bg-white shadow-lg">
+        <div class="card-body">
+            <form method="get" asp-action="Users" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">Search</span>
+                        </label>
+                        <input type="text" name="search" value="@Model.SearchTerm" 
+                               placeholder="Username or email..." 
+                               class="input input-bordered bg-white" />
+                    </div>
+
+                    <!-- Gender Filter -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">Gender</span>
+                        </label>
+                        <select name="gender" class="select select-bordered bg-white">
+                            <option value="">All</option>
+                            <option value="Male" selected="@(Model.SelectedGender == "Male")">Male</option>
+                            <option value="Female" selected="@(Model.SelectedGender == "Female")">Female</option>
+                        </select>
+                    </div>
+
+                    <!-- Date From -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">From Date</span>
+                        </label>
+                        <input type="date" name="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")" 
+                               class="input input-bordered bg-white" />
+                    </div>
+
+                    <!-- Date To -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">To Date</span>
+                        </label>
+                        <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" 
+                               class="input input-bordered bg-white" />
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a asp-action="Users" class="btn btn-outline">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card bg-white shadow-lg">
+        <div class="card-body overflow-x-auto">
+            @if (!Model.Users.Any())
+            {
+                <div class="text-center py-12">
+                    <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500 text-lg">No users found</p>
+                </div>
+            }
+            else
+            {
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th class="bg-gray-100">Avatar</th>
+                            <th class="bg-gray-100">Username</th>
+                            <th class="bg-gray-100">Email</th>
+                            <th class="bg-gray-100">Phone</th>
+                            <th class="bg-gray-100">DOB</th>
+                            <th class="bg-gray-100">Gender</th>
+                            <th class="bg-gray-100">Created</th>
+                            <th class="bg-gray-100">Status</th>
+                            <th class="bg-gray-100">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr class="hover">
+                                <td>
+                                    <div class="avatar">
+                                        <div class="w-12 h-12 rounded-full">
+                                            <img src="@(user.UserAvatar ?? Url.Content("~/images/default-avatar.png"))" 
+                                                 alt="@user.UserName" />
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-medium">@user.UserName</div>
+                                </td>
+                                <td>
+                                    <div class="text-sm">@user.Email</div>
+                                </td>
+                                <td>
+                                    <div class="text-sm">@(user.PhoneNumber ?? "N/A")</div>
+                                </td>
+                                <td>
+                                    <div class="text-sm">@(user.UserDOB?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                </td>
+                                <td>
+                                    <span class="badge @(user.Gender ? "badge-primary" : "badge-secondary")">
+                                        @(user.Gender ? "Male" : "Female")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="text-sm">@(user.CreatedDate?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                </td>
+                                <td>
+                                    @if (user.IsBanned)
+                                    {
+                                        <span class="badge badge-error">Banned</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-success">Active</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="flex gap-2">
+                                        <!-- Ban/Unban Button -->
+                                        <button onclick="confirmAction('@user.Id', '@(user.IsBanned ? "unban" : "ban")')" 
+                                                class="btn btn-sm @(user.IsBanned ? "btn-success" : "btn-warning")">
+                                            <i class="fas @(user.IsBanned ? "fa-unlock" : "fa-ban")"></i>
+                                            @(user.IsBanned ? "Unban" : "Ban")
+                                        </button>
+
+                                        <!-- Delete Button -->
+                                        <button onclick="confirmDelete('@user.Id')" 
+                                                class="btn btn-sm btn-error">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="flex justify-center">
+            <div class="join">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a asp-action="Users" 
+                       asp-route-page="@i"
+                       asp-route-search="@Model.SearchTerm"
+                       asp-route-gender="@Model.SelectedGender"
+                       asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                       asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                       class="join-item btn @(i == Model.CurrentPage ? "btn-active" : "")">
+                        @i
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Ban/Unban Modal -->
+<dialog id="actionModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg" id="actionTitle"></h3>
+        <p class="py-4" id="actionMessage"></p>
+        <div class="modal-action">
+            <form id="actionForm" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="actionUserId" name="userId" />
+                <button type="submit" class="btn btn-primary">Confirm</button>
+                <button type="button" class="btn" onclick="actionModal.close()">Cancel</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<!-- Delete Modal -->
+<dialog id="deleteModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg text-error">Confirm Delete</h3>
+        <p class="py-4">Are you sure you want to delete this user? This action cannot be undone.</p>
+        <div class="modal-action">
+            <form id="deleteForm" method="post" asp-action="DeleteUser">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="deleteUserId" name="userId" />
+                <button type="submit" class="btn btn-error">Delete</button>
+                <button type="button" class="btn" onclick="deleteModal.close()">Cancel</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        function confirmAction(userId, action) {
+            const modal = document.getElementById('actionModal');
+            const form = document.getElementById('actionForm');
+            const title = document.getElementById('actionTitle');
+            const message = document.getElementById('actionMessage');
+            const userIdInput = document.getElementById('actionUserId');
+            
+            if (action === 'ban') {
+                title.textContent = 'Confirm Ban';
+                message.textContent = 'Are you sure you want to ban this user?';
+                form.action = '@Url.Action("BanUser")';
+            } else {
+                title.textContent = 'Confirm Unban';
+                message.textContent = 'Are you sure you want to unban this user?';
+                form.action = '@Url.Action("BanUser")';
+            }
+            
+            userIdInput.value = userId;
+            modal.showModal();
+        }
+
+        function confirmDelete(userId) {
+            const modal = document.getElementById('deleteModal');
+            const userIdInput = document.getElementById('deleteUserId');
+            
+            userIdInput.value = userId;
+            modal.showModal();
+        }
+    </script>
+}
