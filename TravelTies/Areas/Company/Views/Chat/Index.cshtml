@@ -1,0 +1,213 @@
+﻿@model List<Models.Models.Chat>
+@{
+    ViewData["Title"] = "Agent Chat";
+    var me = (Guid)ViewBag.Me;
+    Guid? peer = (Guid?)ViewBag.Peer;
+    string q = ViewBag.Search as string ?? "";
+
+    string sendUrl = Url.Action("Send", "Chat", new { area = "Company" })!;
+    string recallUrl = Url.Action("Recall", "Chat", new { area = "Company" })!;
+    string hideUrl = Url.Action("HideConversation", "Chat", new { area = "Company" })!;
+    string threadUrl = Url.Action("Thread", "Chat", new { area = "Company" })!;
+}
+<section class="w-full py-6">
+    <style>
+        /* Tràn toàn màn hình, thoát container của layout */
+        .full-bleed {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw
+        }
+        /* Cao hết viewport, trừ phần header/top padding ~ 96px (tùy layout của bạn).
+                   Nếu bạn thấy vẫn thiếu/ dư, chỉnh 96px -> 112px/128px cho khớp. */
+        .chat-viewport {
+            height: calc(100vh - 96px);
+        }
+
+        html, body {
+            height: 100%;
+        }
+    </style>
+
+    <div class="full-bleed px-6">
+        <!-- flex ngang; cao 100% khung nhìn -->
+        <div class="chat-viewport flex gap-6" style="display:flex">
+            <!-- SIDEBAR: cố định ~1/5 màn hình, cao full -->
+            <aside class="basis-[20vw] shrink-0 min-w-[280px] h-full bg-white rounded-xl border overflow-hidden flex flex-col">
+                <div class="p-3 border-b">
+                    <form method="get" class="flex gap-2">
+                        <input name="q" value="@q" placeholder="Tìm đại lý..." class="input input-bordered w-full bg-white text-black" />
+                        <button class="btn btn-outline bg-white text-black" type="submit">Tìm</button>
+                    </form>
+                    <div class="mt-2 text-xs text-gray-700">Tìm kiếm chỉ áp vào đại lý; không tìm theo khách.</div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto" id="conv-list">
+                    @{
+                        var partners = ViewBag.Partners as List<Models.Models.User> ?? new List<Models.Models.User>();
+                    }
+                    @if (!partners.Any())
+                    {
+                        <div class="p-3 text-sm text-gray-700">Không có kết quả.</div>
+                    }
+                    else
+                    {
+                        <ul class="menu p-2">
+                            @foreach (var u in partners)
+                            {
+                                <li>
+                                    <button type="button" class="justify-start text-left" onclick="selectPeer('@u.Id')">
+                                        <span class="font-medium text-black">@u.UserName</span>
+                                        @if (!u.IsCompany)
+                                        {
+                                            <span class="text-xs text-gray-500 ml-1">(khách)</span>
+                                        }
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+
+                <div class="p-3 border-t">
+                    @if (peer.HasValue)
+                    {
+                        <form method="post" id="hide-conv-form" class="flex" action="@hideUrl">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="peerId" value="@peer.Value" />
+                            <button type="submit" class="btn btn-outline btn-sm w-full text-red-600">Ẩn cuộc trò chuyện (phía tôi)</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline btn-sm w-full" disabled>Chưa chọn hội thoại</button>
+                    }
+                </div>
+            </aside>
+
+            <!-- KHUNG CHAT: chiếm hết phần còn lại, min-w-0 để không bị co -->
+            <main class="flex-1 min-w-0 h-full bg-white rounded-xl border overflow-hidden flex flex-col">
+                <div class="px-4 py-3 border-b flex items-center justify-between">
+                    <div class="font-semibold text-black">Agent Chat</div>
+                    @if (peer.HasValue)
+                    {
+                        <div class="text-xs text-gray-700 truncate">Đối tác: @peer</div>
+                    }
+                </div>
+
+                <!-- vùng tin nhắn giãn tối đa, có scroll -->
+                <div id="thread" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" data-thread-url="@threadUrl">
+                    @{
+                        var vd = new ViewDataDictionary(ViewData);
+                        vd["Me"] = me; vd["Peer"] = peer ?? Guid.Empty;
+                    }
+                    @await Html.PartialAsync("_Thread", Model, vd)
+                </div>
+
+                <!-- thanh nhập ở đáy, không đẩy chiều cao vượt viewport -->
+                <form id="send-form" method="post" class="p-3 border-t flex gap-2 items-end" action="@sendUrl" data-recall-url="@recallUrl">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="peerId" name="peerId" value="@(peer?.ToString() ?? "")" />
+                    <textarea id="message" name="message" rows="2" class="textarea textarea-bordered flex-1 bg-white text-black" placeholder="Nhập tin nhắn..."></textarea>
+                    <button type="submit" class="btn btn-primary bg-white text-black hover:bg-gray-100">Gửi</button>
+                </form>
+            </main>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const me = "@me";
+        const sendUrl   = "@sendUrl";
+        const recallUrl = "@recallUrl";
+        const hideUrl   = "@hideUrl";
+        const threadUrl = "@threadUrl";
+
+        async function loadThread(peerId){
+          const res = await fetch(`${threadUrl}?peerId=${peerId}`);
+          if (res.ok){
+            const html = await res.text();
+            document.getElementById('thread').innerHTML = html;
+            document.getElementById('peerId').value = peerId;
+            scrollBottom();
+          }
+        }
+        function selectPeer(id){ loadThread(id); }
+
+        function scrollBottom(){ const w = document.getElementById('thread'); if (w) w.scrollTop = w.scrollHeight; }
+        function fmtTime(ts){ try{const d=new Date(ts);return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' '+d.toLocaleDateString();}catch{return '';} }
+        function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+        function addBubble(id,mine,text,ts){
+          const wrap=document.createElement('div');
+          wrap.className=`w-full flex ${mine?'justify-end':'justify-start'}`;
+          wrap.setAttribute('data-chat-id',id);
+          wrap.innerHTML=`
+            <div class="max-w-[75%] px-3 py-2 rounded-xl ${mine?'bg-blue-600 text-white':'bg-white text-gray-800 border'}">
+              <div class="msg-text whitespace-pre-wrap break-words">${escapeHtml(text)}</div>
+              <div class="text-xs opacity-70 mt-1">${fmtTime(ts)}</div>
+              <div class="mt-1 flex gap-2 ${mine?'':'hidden'}">
+                <button class="text-xs underline" onclick="recall('${id}',true)">Thu hồi 2 bên</button>
+                <button class="text-xs underline" onclick="recall('${id}',false)">Xoá phía tôi</button>
+              </div>
+            </div>`;
+          document.getElementById('thread').appendChild(wrap);
+        }
+
+        const connection = new signalR.HubConnectionBuilder().withUrl("/hubs/chat").withAutomaticReconnect().build();
+        connection.on("ReceiveMessage", function(msg){
+          const curPeer = document.getElementById('peerId').value;
+          if ( (msg.senderId===me && msg.receiverId===curPeer) || (msg.senderId===curPeer && msg.receiverId===me) ){
+            addBubble(msg.chatId, msg.senderId===me, msg.message, msg.timestamp);
+            scrollBottom();
+          }
+        });
+        connection.on("Recalled", function(data){
+          const el = document.querySelector(`[data-chat-id="${data.chatId}"] .msg-text`);
+          if (el) el.textContent = "🗑 Tin nhắn đã bị thu hồi";
+        });
+        connection.start().catch(console.error);
+
+        document.getElementById('send-form').addEventListener('submit', async e=>{
+          e.preventDefault();
+          const token  = document.querySelector('input[name="__RequestVerificationToken"]').value;
+          const peerId = document.getElementById('peerId').value;
+          const msg    = (document.getElementById('message').value||'').trim();
+          if(!peerId){ alert('Chưa chọn hội thoại.'); return; }
+          if(!msg) return;
+          const fd=new FormData(); fd.append('peerId',peerId); fd.append('message',msg);
+          const res = await fetch(sendUrl, { method:'POST', headers:{ 'RequestVerificationToken': token }, body: fd });
+          if(res.ok) document.getElementById('message').value=''; else alert('Không gửi được tin.');
+        });
+
+        async function recall(chatId,both){
+          const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+          if(both){ if(!confirm('Thu hồi tin nhắn cho cả 2 bên?')) return; }
+          else { if(!confirm('Xoá tin nhắn ở phía bạn?')) return; }
+          const fd=new FormData(); fd.append('chatId',chatId); fd.append('both',both?'true':'false');
+          const res=await fetch(recallUrl,{method:'POST',headers:{'RequestVerificationToken':token},body:fd});
+          if(res.ok && !both){ const node=document.querySelector(`[data-chat-id="${chatId}"]`); if(node) node.remove(); }
+          else if(!res.ok) alert('Không thể thực hiện.');
+        }
+        window.recall = recall;
+
+        const hideForm = document.getElementById('hide-conv-form');
+        if (hideForm){
+          hideForm.addEventListener('submit', async e=>{
+            e.preventDefault();
+            if(!confirm('Ẩn toàn bộ cuộc trò chuyện (phía bạn)?')) return;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const fd = new FormData(hideForm);
+            const res = await fetch(hideUrl,{method:'POST',headers:{'RequestVerificationToken':token},body:fd});
+            if(res.ok) location.href='@Url.Action("Index", "Chat", new { area = "Company" })';
+            else alert('Không thể ẩn hội thoại.');
+          });
+        }
+
+        scrollBottom();
+    </script>
+}

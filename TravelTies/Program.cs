@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Net.payOS;
 using Utilities.Utils;
+using TravelTies.Hubs;   // <— cho Chat
 
 DotNetEnv.Env.Load();
 
@@ -152,6 +153,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapHub<ChatHub>("/hubs/chat");   //endpoint Six No R :)
 
 //todo:change mapping route
 app.MapControllerRoute(
