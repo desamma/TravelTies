@@ -1,0 +1,33 @@
+﻿@model List<Models.Models.Chat>
+@{
+    var me = (Guid)ViewData["Me"];
+}
+@if (Model == null || !Model.Any())
+{
+    <div class="text-center text-gray-600 py-10">Chưa có tin nhắn</div>
+}
+else
+{
+    foreach (var m in Model)
+    {
+        var mine = (m.SenderId == me);
+        <div class="w-full flex @(mine ? "justify-end" : "justify-start")" data-chat-id="@m.ChatId">
+            <div class="max-w-[75%] px-3 py-2 rounded-xl @(mine ? "bg-blue-600 text-white" : "bg-white text-gray-800 border")">
+                <div class="msg-text whitespace-pre-wrap break-words">@m.Message</div>
+                <div class="text-xs opacity-70 mt-1">@m.Timestamp.ToLocalTime().ToString("HH:mm dd/MM/yyyy")</div>
+                @if (mine)
+                {
+                    <div class="mt-1 flex gap-2">
+                        <form method="post" asp-action="Recall" asp-route-both="true">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="chatId" value="@m.ChatId" />
+                            <button type="submit" class="text-xs underline">Thu hồi 2 bên</button>
+                        </form>
+                        <button type="button" class="text-xs underline" onclick="recall('@m.ChatId', false)">Xoá phía tôi</button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+

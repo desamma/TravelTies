@@ -36,15 +36,21 @@
             <a asp-area="Customer" asp-action="Index" asp-controller="Tour"
                class="text-sm font-medium text-gray-700 hover:text-green-500">Tours</a>
 
-            <!-- chỉ đổi href, giữ nguyên classes -->
-            <a href="@Url.Action("Deals", "Tour", new { area = "Customer" })"
+            <a asp-area="Customer" asp-controller="Tour" asp-action="Deals"
                class="text-sm font-medium text-gray-700 hover:text-green-500">Ưu đãi</a>
 
-            <a href="@Url.Action("Featured", "Tour", new { area = "Customer" })"
+            <a asp-area="Customer" asp-controller="Tour" asp-action="Featured"
                class="flex items-center text-sm font-medium text-gray-700 hover:text-green-500">
                 <i class="far fa-star mr-1"></i> Nổi bật
             </a>
+
             <a href="/support" class="text-sm font-medium text-gray-700 hover:text-green-500">Hỗ trợ</a>
+
+            <!-- Nút Chat (giữ style đồng bộ) -->
+            <a asp-area="Customer" asp-controller="Chat" asp-action="Index"
+               class="px-3 py-1.5 border border-gray-300 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 transition flex items-center gap-1">
+                <span aria-hidden="true">💬</span> Chat
+            </a>
         </div>
 
         <!-- Right Actions -->

@@ -42,8 +42,6 @@
 
         <!-- Menu (giữ style như mẫu, đổi link sang Area=Company) -->
         <div class="flex items-center flex-wrap gap-4">
-            
-
             <a asp-area="Company" asp-controller="Home" asp-action="Index"
                class="flex items-center text-sm font-medium text-blue-600 hover:text-green-500">
                 <i class="fas fa-home mr-1"></i> Tổng quan
@@ -60,6 +58,12 @@
                class="text-sm font-medium text-gray-700 hover:text-green-500">Booking</a>
             <a asp-area="Company" asp-controller="Profile" asp-action="Index"
                class="text-sm font-medium text-gray-700 hover:text-green-500">Hồ sơ</a>
+
+            <!-- Nút Chat: dẫn sang màn hình chat (Area Customer) -->
+            <a asp-area="Company" asp-controller="Chat" asp-action="Index"
+               class="px-3 py-1.5 border border-gray-300 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 transition flex items-center gap-1">
+                <span aria-hidden="true">💬</span> Chat
+            </a>
         </div>
 
         <!-- Right Actions -->
@@ -78,9 +82,9 @@
                         </div>
                     </div>
                     <ul tabindex="0"
-                        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white rounded-box w-56">
+                        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white rounded-box w-56 text-black">
                         <li class="menu-title flex items-center gap-2">
-                            <span class="text-black">@(currentUser?.UserName ?? User.Identity?.Name ?? "User")</span>
+                            <span>@(currentUser?.UserName ?? User.Identity?.Name ?? "User")</span>
                             @if (isCompany)
                             {
                                 <span class="badge badge-primary badge-sm">Company</span>
