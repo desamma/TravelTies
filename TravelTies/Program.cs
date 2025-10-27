@@ -101,10 +101,10 @@ builder.Services.AddSession(options =>
 
 // External login (Google)
 builder.Services.AddAuthentication()
-    .AddGoogle(options =>
+    .AddGoogle(GoogleDefaults.AuthenticationScheme, option =>
     {
-        options.ClientId = builder.Configuration["Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+        option.ClientId = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTID");
+        option.ClientSecret = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTSECRET");
     });
 
 
