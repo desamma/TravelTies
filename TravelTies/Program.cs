@@ -8,8 +8,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Net.payOS;
-using Utilities.Utils;
 using TravelTies.Hubs;   // <— cho Chat
+using TravelTies.AI;
+using Utilities.Utils;
 
 DotNetEnv.Env.Load();
 
@@ -116,6 +117,9 @@ builder.Services.AddAuthentication(options =>
         option.ClientSecret = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTSECRET");
     });
 
+
+builder.Services.AddHttpClient<IAiService, GeminiRestAiService>();
+
 var app = builder.Build();
 
 // Seed data for roles and admin user
@@ -163,4 +167,25 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
+app.MapGet("/ai/test", async (IConfiguration cfg, ILoggerFactory lf) =>
+{
+    var logger = lf.CreateLogger("AiTest");
+    var key = cfg["GoogleAI:ApiKey"] ?? Environment.GetEnvironmentVariable("GOOGLE_API_KEY");
+    if (string.IsNullOrWhiteSpace(key)) return Results.Text("No API key");
+
+    var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}";
+    var payload = new
+    {
+        system_instruction = new { parts = new[] { new { text = "You are a helpful assistant." } } },
+        contents = new[] { new { role = "user", parts = new[] { new { text = "Say hello in Vietnamese." } } } }
+    };
+
+    using var http = new HttpClient();
+    var res = await http.PostAsJsonAsync(url, payload);
+    var body = await res.Content.ReadAsStringAsync();
+
+    logger.LogInformation("AI test status={Status} body={Body}", (int)res.StatusCode, body);
+    return Results.Text($"status={(int)res.StatusCode}\n\n{body}", "text/plain");
+});
+
 app.Run();
