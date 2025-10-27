@@ -99,22 +99,14 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(60); // Set session timeout
 });
 
-// Google login
-builder.Services.AddAuthentication(options =>
+// External login (Google)
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
     {
-        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-    })
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Identity/Account/Login";
-        options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    })
-    .AddGoogle(GoogleDefaults.AuthenticationScheme, option =>
-    {
-        option.ClientId = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTID");
-        option.ClientSecret = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTSECRET");
+        options.ClientId = builder.Configuration["Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"];
     });
+
 
 var app = builder.Build();
 
