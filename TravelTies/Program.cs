@@ -101,11 +101,15 @@ builder.Services.AddSession(options =>
 });
 
 // External login (Google)
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    })
     .AddGoogle(GoogleDefaults.AuthenticationScheme, option =>
     {
-        option.ClientId = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTID");
-        option.ClientSecret = Environment.GetEnvironmentVariable("GOOGLESETTINGS__CLIENTSECRET");
+        option.ClientId = builder.Configuration["Google:ClientId"];
+        option.ClientSecret = builder.Configuration["Google:ClientSecret"];
     });
 
 

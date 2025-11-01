@@ -171,6 +171,49 @@ namespace TravelTies.Areas.Customer.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy thông tin hóa đơn từ PayOS API
+        /// </summary>
+        private async Task<DateTime?> GetInvoiceIssuedDatetime(long orderCode)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("x-client-id", _clientId);
+                httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+
+                var response = await httpClient.GetAsync($"https://api-merchant.payos.vn/v2/payment-requests/{orderCode}/invoices");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to get invoice for order {orderCode}. Status: {status}", orderCode, response.StatusCode);
+                    return null;
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var invoiceResponse = JsonConvert.DeserializeObject<InvoiceResponse>(jsonContent);
+
+                if (invoiceResponse?.Code == "00" && invoiceResponse.Data?.Invoices?.Any() == true)
+                {
+                    var firstInvoice = invoiceResponse.Data.Invoices.First();
+                    if (firstInvoice.IssuedDatetime.HasValue)
+                    {
+                        _logger.LogInformation("Retrieved invoice datetime for order {orderCode}: {datetime}", 
+                            orderCode, firstInvoice.IssuedDatetime.Value);
+                        return firstInvoice.IssuedDatetime.Value;
+                    }
+                }
+
+                _logger.LogWarning("No invoice datetime found for order {orderCode}", orderCode);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving invoice for order {orderCode}", orderCode);
+                return null;
+            }
+        }
+
         // A simple cancel page for user when they click cancel on payment page
         [HttpGet("cancel")]
         [AllowAnonymous]
@@ -203,14 +246,29 @@ namespace TravelTies.Areas.Customer.Controllers
                     return RedirectToAction("Failed", new { orderCode = orderCode.Value });
                 }
 
+                // Lấy thông tin hóa đơn để có issuedDatetime
+                var invoiceDateTime = await GetInvoiceIssuedDatetime(orderCode.Value);
+
                 // Lấy tất cả ticket liên quan tới orderCode và cập nhật
                 var tickets = await _ticketRepo.GetAllQueryable(t => t.PaymentOrderCode == orderCode.Value, asNoTracking: false).ToListAsync();
 
-                // Cập nhật từng ticket: IsPayed = true, cập nhật PaymentOrderCode
+                // Cập nhật từng ticket: IsPayed = true, TransactionDateTime
                 foreach (var tk in tickets)
                 {
                     tk.IsPayed = true;
                     tk.PaymentOrderCode = orderCode.Value; // chắc chắn lưu
+                    
+                    // Lưu invoice datetime nếu có, nếu không thì dùng thời gian hiện tại
+                    if (invoiceDateTime.HasValue)
+                    {
+                        tk.TransactionDateTime = invoiceDateTime.Value;
+                    }
+                    else
+                    {
+                        tk.TransactionDateTime = DateTime.Now;
+                        _logger.LogWarning("Using current datetime for ticket {ticketId} as invoice datetime not available", tk.TicketId);
+                    }
+                    
                     await _ticketRepo.UpdateAsync(tk);
                 }
 
@@ -298,7 +356,7 @@ namespace TravelTies.Areas.Customer.Controllers
             return sb.ToString();
         }
 
-// Direct endpoint if you want to redirect manually
+        // Direct endpoint if you want to redirect manually
         [HttpGet("success/{orderCode:long}")]
         public async Task<IActionResult> Success(long orderCode)
         {
@@ -321,7 +379,6 @@ namespace TravelTies.Areas.Customer.Controllers
 
             return View("Return", vm);
         }
-
 
         [HttpGet("failed/{orderCode:long}")]
         public IActionResult Failed(long orderCode, string? reason)
