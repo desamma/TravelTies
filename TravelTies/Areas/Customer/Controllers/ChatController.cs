@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
 using Models.Models;
 using TravelTies.Hubs;
+using TravelTies.AI; // <-- thêm
 
 namespace TravelTies.Areas.Customer.Controllers;
 
@@ -16,15 +17,21 @@ public class ChatController : Controller
     private readonly IChatRepository _chatRepo;
     private readonly IUserRepository _userRepo;
     private readonly IHubContext<ChatHub> _hub;
+    private readonly IAiService _ai;              // <-- thêm
 
     private const string HiddenConvKey = "chat:hidden:conversations";
     private const string HiddenMsgKey = "chat:hidden:messages";
 
-    public ChatController(IChatRepository chatRepo, IUserRepository userRepo, IHubContext<ChatHub> hub)
+    public ChatController(
+        IChatRepository chatRepo,
+        IUserRepository userRepo,
+        IHubContext<ChatHub> hub,
+        IAiService ai)                         // <-- thêm
     {
         _chatRepo = chatRepo;
         _userRepo = userRepo;
         _hub = hub;
+        _ai = ai;                              // <-- thêm
     }
 
     private Guid Me() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -37,7 +44,25 @@ public class ChatController : Controller
     private void SaveHiddenSet(string key, HashSet<Guid> set)
         => HttpContext.Session.SetString(key, string.Join(',', set));
 
-    // Lấy map đối tác -> thời điểm tin gần nhất (chỉ giữa tôi và họ)
+    // tạo user ảo AI nếu chưa có
+    private async Task EnsureAiUserAsync()
+    {
+        var ai = await _userRepo.GetAllQueryable(u => u.Id == AiAssistant.Id).FirstOrDefaultAsync();
+        if (ai == null)
+        {
+            var u = new User
+            {
+                Id = AiAssistant.Id,
+                UserName = AiAssistant.DisplayName,
+                Email = "ai@travelties.local",
+                IsCompany = true,
+                CreatedDate = DateTime.UtcNow
+            };
+            await _userRepo.AddAsync(u);
+        }
+    }
+
+    // map đối tác -> thời điểm tin gần nhất
     private async Task<Dictionary<Guid, DateTime>> GetLastTsMapAsync(Guid me)
     {
         var raw = await _chatRepo.GetAllQueryable(c => c.SenderId == me || c.ReceiverId == me)
@@ -53,8 +78,7 @@ public class ChatController : Controller
             .ToDictionary(g => g.Key, g => g.Max(z => z.Timestamp));
     }
 
-    // Customer: sidebar CHỈ hiển thị đại lý (IsCompany=true). Search cũng chỉ áp vào đại lý.
-    // Customer: có q -> tìm toàn bộ đại lý; không q -> chỉ lịch sử
+    // Customer: sidebar CHỈ đại lý, search cũng chỉ đại lý; luôn PIN AI trên đầu
     private async Task<List<User>> GetPartnersAsync(Guid me, string? search)
     {
         var hidden = GetHiddenSet(HiddenConvKey);
@@ -64,32 +88,56 @@ public class ChatController : Controller
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var term = search.Trim().ToLower();
+            var term = search.Trim();
             q = _userRepo.GetAllQueryable(u =>
-                    u.IsCompany
-                    && u.Id != me
-                    && u.UserName.ToLower().Contains(term));
+                    u.IsCompany && u.Id != me &&
+                    (u.UserName.Contains(term) || (u.Email != null && u.Email.Contains(term))));
         }
         else
         {
             var counterpartIds = lastMap.Keys;
+            // chỉ lấy các đại lý đã có lịch sử
             q = _userRepo.GetAllQueryable(u => u.IsCompany && counterpartIds.Contains(u.Id));
         }
 
-        var users = await q.Where(u => !hidden.Contains(u.Id)).ToListAsync();
+        var users = await q.Where(u => !hidden.Contains(u.Id))
+                           .OrderBy(u => u.UserName)
+                           .Take(50)
+                           .ToListAsync();
 
-        // Sắp xếp: ưu tiên có lịch sử (dựa vào lastMap), không có lịch sử cho xuống cuối
-        return users
-            .OrderByDescending(u => lastMap.TryGetValue(u.Id, out var ts) ? ts : DateTime.MinValue)
-            .ThenBy(u => u.UserName)
-            .Take(50)
+        // PIN AI lên đầu list
+        var ai = users.FirstOrDefault(u => u.Id == AiAssistant.Id);
+        if (ai == null)
+        {
+            users.Insert(0, new User
+            {
+                Id = AiAssistant.Id,
+                UserName = AiAssistant.DisplayName,
+                Email = "ai@travelties.local",
+                IsCompany = true
+            });
+        }
+        else
+        {
+            users.Remove(ai);
+            users.Insert(0, ai);
+        }
+
+        // sau AI, sắp theo thời gian mới nhất rồi theo tên
+        var ordered = new[] { users.First() }
+            .Concat(users.Skip(1)
+                .OrderByDescending(u => lastMap.TryGetValue(u.Id, out var ts) ? ts : DateTime.MinValue)
+                .ThenBy(u => u.UserName))
             .ToList();
-    }
 
+        return ordered;
+    }
 
     [HttpGet("/customer/chat")]
     public async Task<IActionResult> Index(string? q, Guid? with)
     {
+        await EnsureAiUserAsync(); // <-- thêm
+
         var me = Me();
         var partners = await GetPartnersAsync(me, q);
 
@@ -112,9 +160,8 @@ public class ChatController : Controller
         ViewBag.Me = me;
         ViewBag.Peer = peer;
         ViewBag.Search = q;
-        ViewBag.Partners = partners; // <-- thêm dòng này
+        ViewBag.Partners = partners;
         return View(messages);
-
     }
 
     [HttpGet]
@@ -142,6 +189,7 @@ public class ChatController : Controller
         if (peerId == Guid.Empty || string.IsNullOrWhiteSpace(message)) return BadRequest();
         var me = Me();
 
+        // 1) lưu tin nhắn của user
         var chat = new Chat
         {
             ChatId = Guid.NewGuid(),
@@ -153,17 +201,30 @@ public class ChatController : Controller
         };
         if (!await _chatRepo.AddAsync(chat)) return StatusCode(500);
 
-        var payload = new
-        {
-            chat.ChatId,
-            chat.Message,
-            chat.Timestamp,
-            chat.IsUserChat,
-            chat.SenderId,
-            chat.ReceiverId
-        };
+        var payload = new { chat.ChatId, chat.Message, chat.Timestamp, chat.IsUserChat, chat.SenderId, chat.ReceiverId };
         await _hub.Clients.Group(me.ToString()).SendAsync("ReceiveMessage", payload);
         await _hub.Clients.Group(peerId.ToString()).SendAsync("ReceiveMessage", payload);
+
+        // 2) nếu đang chat với AI → gọi AI và auto-reply
+        if (peerId == AiAssistant.Id)
+        {
+            var reply = await _ai.AskAsync(message, me);
+
+            var aiMsg = new Chat
+            {
+                ChatId = Guid.NewGuid(),
+                Message = reply,
+                Timestamp = DateTime.UtcNow,
+                IsUserChat = false,
+                SenderId = AiAssistant.Id,
+                ReceiverId = me
+            };
+            await _chatRepo.AddAsync(aiMsg);
+
+            var aiPayload = new { aiMsg.ChatId, aiMsg.Message, aiMsg.Timestamp, aiMsg.IsUserChat, aiMsg.SenderId, aiMsg.ReceiverId };
+            await _hub.Clients.Group(me.ToString()).SendAsync("ReceiveMessage", aiPayload);
+        }
+
         return Ok(new { success = true });
     }
 
