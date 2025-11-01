@@ -14,6 +14,9 @@ public class Ticket
     [DataType(DataType.Date)]
     public DateOnly TourDate { get; set; }
     
+    [DataType(DataType.DateTime)]
+    public DateTime TransactionDateTime { get; set; }
+    
     [Display(Name = "Phone Number")]
     [DataType(DataType.PhoneNumber)]
     [StringLength(11, ErrorMessage = "The phone number must be at most 11 digits.")]
