@@ -1,27 +1,118 @@
-﻿<!DOCTYPE html>
+﻿@removeTagHelper Microsoft.AspNetCore.Mvc.TagHelpers.BodyTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TravelTies</title>
-    @*<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />*@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        /* === Fly-in Welcome icon === */
+        #welcome-fly {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            width: 96px;
+            height: auto;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2000;
+            transform: translate(-50%, -50%) scale(0.1); /* bắt đầu rất nhỏ */
+            transition: transform .5s ease-out, opacity .4s ease; /* 0.5s phóng to */
+            filter: drop-shadow(0 8px 20px rgba(0,0,0,.25));
+            will-change: transform, opacity;
+        }
+
+            #welcome-fly.show {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(10); /* phóng to gấp 10 */
+            }
+    </style>
+    <style media="print">
+        #welcome-fly {
+            display: none;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
-    <!-- Navbar -->
-    @await Html.PartialAsync("CustomComponents/_Navbar")
 
-    <!-- Main Content -->
-    <main role="main" class="flex-grow pt-24 container mx-auto px-12">
-        @RenderBody()
-    </main>
+    <!-- Watermark image (fixed behind everything) -->
+    <img src="@Url.Content("~/images/signature.png")" alt="" class="wm-fixed" />
 
-    <!-- Footer -->
-    @await Html.PartialAsync("CustomComponents/_Footer")
+    <!-- Everything above the watermark -->
+    <div class="site-stack flex flex-col min-h-screen">
+        <!-- Navbar -->
+        @await Html.PartialAsync("CustomComponents/_Navbar")
+
+        <!-- Main Content -->
+        <main role="main" class="flex-grow pt-24 container mx-auto px-12">
+            @RenderBody()
+        </main>
+
+        <!-- Footer -->
+        @await Html.PartialAsync("CustomComponents/_Footer")
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        (function () {
+            // Chỉ kích hoạt khi VỪA đăng nhập xong:
+            // 1) referrer chứa "login" (đi từ trang đăng nhập)
+            // 2) hoặc URL hiện tại có ?welcome=1 (bạn có thể thêm khi redirect sau login)
+            var justLoggedIn =
+                /login/i.test(document.referrer || '') ||
+                /(^|[?&])welcome=1(&|$)/i.test(location.search);
+
+            if (!justLoggedIn) return;
+
+            // Tạo <img id="welcome-fly"> bằng JS (không cần Razor if)
+            var fly = document.createElement('img');
+            fly.id = 'welcome-fly';
+            fly.alt = 'Welcome';
+            fly.src = '@Url.Content("~/images/wel_icon.png")';
+            document.body.appendChild(fly);
+
+            // Helper: tìm vị trí logo/navbar brand
+            function findBrandRect() {
+                var header = document.querySelector('header') || document;
+                var el =
+                    header.querySelector('.navbar-brand, [data-brand], a[aria-label="Home"], a[aria-label="Trang chủ"]') ||
+                    header.querySelector('a[href="/"]') ||
+                    header.querySelector('nav a');
+                if (el) return el.getBoundingClientRect();
+                return { left: 20, top: 12, width: 0, height: 0 }; // fallback
+            }
+
+            // PHA 1: fade-in + phóng lên gấp 10 trong 0.5s
+            requestAnimationFrame(function () { fly.classList.add('show'); });
+
+            // PHA 2: giữ 1s ở scale(10), rồi chuẩn bị bay
+            setTimeout(function () {
+                var r = findBrandRect();
+                var tx = (r.left + r.width / 2) - (window.innerWidth / 2);
+                var ty = (r.top  + r.height / 2) - (window.innerHeight / 2);
+
+                // PHA 3: bay 2s tới logo và thu nhỏ về đúng kích thước ban đầu (scale 1)
+                fly.style.transition = 'transform 2s cubic-bezier(.22,.61,.36,1), opacity .8s ease';
+                fly.style.transform  = 'translate(calc(-50% + ' + tx + 'px), calc(-50% + ' + ty + 'px)) scale(1)';
+
+                // Khi bay xong → mờ dần rồi remove
+                var onEnd = function (e) {
+                    if (e.propertyName !== 'transform') return;
+                    fly.removeEventListener('transitionend', onEnd);
+                    fly.style.transition = 'opacity .25s ease';
+                    fly.style.opacity = '0';
+                    setTimeout(function () { fly.remove(); }, 260);
+                };
+                fly.addEventListener('transitionend', onEnd);
+            }, 1500); // 0.5s phóng to + 1.0s giữ nguyên = 1.5s rồi mới bay
+        })();
+    </script>
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

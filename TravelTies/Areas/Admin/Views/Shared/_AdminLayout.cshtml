@@ -1,131 +1,182 @@
-@* Views/Shared/_Layout.cshtml *@
+@* Views/Shared/_AdminLayout.cshtml *@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-   <meta charset="utf-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-   <title>@ViewData["Title"] - Travel Ties Admin</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Travel Ties Admin</title>
 
-   <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-   @* Optional: small inline style (safe) — keep overlay / media rules in site.css *@
-   <style>
-      .sidebar-active {
-         background-color: rgba(59, 130, 246, 0.1);
-         border-left: 4px solid #3b82f6;
-         font-weight: 600;
-      }
-      body { background-color: #f9fafb; }
-   </style>
+    <style>
+        /* ===== Watermark đặt bằng <img> cố định phía sau ===== */
+        .wm-fixed {
+            position: fixed;
+            inset: 0;
+            margin: auto;
+            width: min(650px, 80vw);
+            height: auto;
+            opacity: 0.06; /* chỉnh 0.03–0.10 tuỳ ý */
+            transform: rotate(-15deg);
+            pointer-events: none; /* không chặn click */
+            z-index: 0; /* dưới toàn bộ nội dung thật */
+        }
+
+        /* Toàn bộ nội dung thật đặt trong lớp này để nổi trên watermark */
+        .site-stack {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        /* Backdrop cho sidebar/drawer trên mobile */
+        #sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            display: none; /* mặc định ẩn */
+            z-index: 60; /* cao hơn watermark và nội dung */
+        }
+        /* Khi body có class này (được script toggle) thì show backdrop */
+        body.sidebar-overlay-active #sidebar-backdrop {
+            display: block;
+        }
+
+        /* Một số tô điểm nhỏ giữ nguyên từ layout cũ */
+        .sidebar-active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            font-weight: 600;
+        }
+
+        body {
+            background-color: #f9fafb;
+        }
+    </style>
+
+    <!-- Ẩn watermark khi in (dùng thẻ style có media=print để tránh Razor hiểu nhầm) -->
+    <style media="print">
+        .wm-fixed {
+            display: none;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gray-50">
-<div class="drawer lg:drawer-open min-h-screen">
-   @* KEEP the toggle checkbox in the layout so label in the partial can target it *@
-   <input id="admin-drawer" type="checkbox" class="drawer-toggle" />
 
-   <!-- Main Content -->
-   <div class="drawer-content flex flex-col min-h-screen">
-      <!-- small-screen drawer toggle button (hamburger) -->
-      <div class="p-4 lg:hidden">
-         <label for="admin-drawer" class="btn btn-square btn-ghost" aria-label="open sidebar">
-            <i class="fas fa-bars text-xl"></i>
-         </label>
-      </div>
+    <!-- Watermark image (cố định dưới mọi nội dung) -->
+    <img src="@Url.Content("~/images/signature.png")" alt="" class="wm-fixed" />
 
-      <!-- Top bar area: if you removed your original large navbar, keep this thin area or
-           re-add what you need here (avatar, notifications, etc). This is optional. -->
+    <!-- Toàn bộ UI admin nằm trong .site-stack để ở trên watermark -->
+    <div class="site-stack">
 
-      <main class="p-6">
-         @* flash messages *@
-         @if (TempData["Success"] != null)
-         {
-         <div class="alert alert-success shadow-lg mb-6">
-            <i class="fas fa-check-circle text-xl"></i>
-            <span>@TempData["Success"]</span>
-         </div>
-         }
+        <div class="drawer lg:drawer-open min-h-screen">
+            @* Toggle checkbox để label trong partial có thể target *@
+            <input id="admin-drawer" type="checkbox" class="drawer-toggle" />
 
-         @if (TempData["Error"] != null)
-         {
-         <div class="alert alert-error shadow-lg mb-6">
-            <i class="fas fa-exclamation-circle text-xl"></i>
-            <span>@TempData["Error"]</span>
-         </div>
-         }
+            <!-- Main Content -->
+            <div class="drawer-content flex flex-col min-h-screen">
+                <!-- Nút mở sidebar trên màn hình nhỏ -->
+                <div class="p-4 lg:hidden">
+                    <label for="admin-drawer" class="btn btn-square btn-ghost" aria-label="open sidebar">
+                        <i class="fas fa-bars text-xl"></i>
+                    </label>
+                </div>
 
-         @RenderBody()
-      </main>
+                <!-- Top bar (nếu cần thêm avatar/notify thì thêm tại đây) -->
 
-      <footer class="footer footer-center p-4 bg-white text-base-content border-t mt-auto">
-         <aside>
-            <p>© @DateTime.Now.Year Travel Ties Admin Panel - All rights reserved</p>
-         </aside>
-      </footer>
-   </div>
+                <main class="p-6">
+                    @* flash messages *@
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success shadow-lg mb-6">
+                            <i class="fas fa-check-circle text-xl"></i>
+                            <span>@TempData["Success"]</span>
+                        </div>
+                    }
 
-   @* RENDER SIDEBAR PARTIAL HERE (moved out of layout) *@
-   @await Html.PartialAsync("_AdminSidebar")
-</div>
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-error shadow-lg mb-6">
+                            <i class="fas fa-exclamation-circle text-xl"></i>
+                            <span>@TempData["Error"]</span>
+                        </div>
+                    }
 
-@* Backdrop element (script will toggle body.sidebar-overlay-active); optional because the JS can create it,
-       but having it here is explicit and avoids race conditions. Put overlay CSS in site.css. *@
-<div id="sidebar-backdrop" aria-hidden="true"></div>
+                    @RenderBody()
+                </main>
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
+                <footer class="footer footer-center p-4 bg-white text-base-content border-t mt-auto">
+                    <aside>
+                        <p>© @DateTime.Now.Year Travel Ties Admin Panel - All rights reserved</p>
+                    </aside>
+                </footer>
+            </div>
 
-<script>
-   // Sidebar overlay script (move to site.js if you prefer)
-   (function () {
-      const drawerCheckbox = document.getElementById('admin-drawer');
-      if (!drawerCheckbox) return;
+            @* Sidebar *@
+            @await Html.PartialAsync("_AdminSidebar")
+        </div>
 
-      // Ensure there's a backdrop element
-      let backdrop = document.getElementById('sidebar-backdrop');
-      if (!backdrop) {
-         backdrop = document.createElement('div');
-         backdrop.id = 'sidebar-backdrop';
-         document.body.appendChild(backdrop);
-      }
+        @* Backdrop element cho overlay; script bên dưới sẽ toggle *@
+        <div id="sidebar-backdrop" aria-hidden="true"></div>
 
-      function setOverlayActive(active) {
-         if (active) {
-            document.body.classList.add('sidebar-overlay-active');
-            drawerCheckbox.checked = true;
-            const sidebarAside = document.querySelector('.drawer-side aside');
-            if (sidebarAside) {
-               sidebarAside.setAttribute('tabindex', '-1');
-               sidebarAside.focus();
+    </div> <!-- /.site-stack -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script>
+        // Sidebar overlay script (giữ nguyên, có sẵn trong layout của bạn)
+        (function () {
+            const drawerCheckbox = document.getElementById('admin-drawer');
+            if (!drawerCheckbox) return;
+
+            // Ensure there's a backdrop element
+            let backdrop = document.getElementById('sidebar-backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.id = 'sidebar-backdrop';
+                document.body.appendChild(backdrop);
             }
-         } else {
-            document.body.classList.remove('sidebar-overlay-active');
-            drawerCheckbox.checked = false;
-         }
-      }
 
-      // Toggle when checkbox changes (label clicks)
-      drawerCheckbox.addEventListener('change', function () {
-         setOverlayActive(!!drawerCheckbox.checked);
-      });
+            function setOverlayActive(active) {
+                if (active) {
+                    document.body.classList.add('sidebar-overlay-active');
+                    drawerCheckbox.checked = true;
+                    const sidebarAside = document.querySelector('.drawer-side aside');
+                    if (sidebarAside) {
+                        sidebarAside.setAttribute('tabindex', '-1');
+                        sidebarAside.focus();
+                    }
+                } else {
+                    document.body.classList.remove('sidebar-overlay-active');
+                    drawerCheckbox.checked = false;
+                }
+            }
 
-      // Click backdrop to close
-      backdrop.addEventListener('click', function () {
-         setOverlayActive(false);
-      });
+            // Toggle khi checkbox thay đổi (label click)
+            drawerCheckbox.addEventListener('change', function () {
+                setOverlayActive(!!drawerCheckbox.checked);
+            });
 
-      // Close on Escape
-      document.addEventListener('keydown', function (e) {
-         if (e.key === 'Escape' && document.body.classList.contains('sidebar-overlay-active')) {
-            setOverlayActive(false);
-         }
-      });
+            // Click backdrop để đóng
+            document.getElementById('sidebar-backdrop')
+                .addEventListener('click', function () {
+                    setOverlayActive(false);
+                });
 
-      // Initialize state on load
-      if (drawerCheckbox.checked) setOverlayActive(true);
-   })();
-</script>
+            // Đóng bằng Escape
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && document.body.classList.contains('sidebar-overlay-active')) {
+                    setOverlayActive(false);
+                }
+            });
 
-<script src="~/js/site.js" asp-append-version="true"></script>
-@await RenderSectionAsync("Scripts", required: false)
+            // Khởi tạo trạng thái khi load
+            if (drawerCheckbox.checked) setOverlayActive(true);
+        })();
+    </script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

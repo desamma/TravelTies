@@ -210,5 +210,73 @@
         </div>
     </div>
 </section>
+@* === Floating Chat Button (Customer Home only) === *@
+<a href="/Customer/Chat"
+   class="tt-fab-chat"
+   aria-label="Mở chat khách hàng"
+   title="Chat">
+</a>
+
+<style>
+    .tt-fab-chat {
+        position: fixed;
+        right: max(16px, env(safe-area-inset-right));
+        bottom: max(16px, env(safe-area-inset-bottom));
+        width: 64px;
+        height: 64px;
+        border-radius: 9999px;
+        background: url('/images/chat.png') no-repeat center center;
+        background-size: cover; /* PNG ô chat */
+        display: inline-block;
+        box-shadow: 0 10px 25px rgba(16,185,129,.35); /* emerald */
+        z-index: 1050;
+        text-decoration: none;
+        transform: scale(.9);
+        opacity: 0;
+        animation: tt-fab-in .38s ease-out forwards;
+        transition: transform .25s ease, filter .25s ease;
+    }
+
+        .tt-fab-chat:hover {
+            filter: brightness(1.08);
+            transform: scale(.95);
+        }
+
+    /* Escape Razor: @@keyframes */
+    @@keyframes tt-fab-in {
+        from {
+            transform: translateY(8px) scale(.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+
+<style media="print">
+    .tt-fab-chat {
+        display: none;
+    }
+</style>
+
+<script>
+    (function(){
+      const btn = document.querySelector('.tt-fab-chat');
+      if(!btn) return;
+      let ticking = false;
+      function onScroll(){
+        const y = window.scrollY;
+        // Ẩn bớt khi cuộn rất sâu cho gọn UI
+        btn.style.opacity = (y > 1200) ? '0.25' : '1';
+        ticking = false;
+      }
+      window.addEventListener('scroll', () => {
+        if(!ticking){ requestAnimationFrame(onScroll); ticking = true; }
+      }, {passive:true});
+    })();
+</script>
 
 
