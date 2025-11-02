@@ -45,7 +45,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 }, ServiceLifetime.Transient);
-
+//đọc data AI
+builder.Services.AddHostedService<TourDataUpdater>();
 // Identity and roles
 builder.Services
     .AddIdentity<User, IdentityRole<Guid>>(options =>
