@@ -37,14 +37,15 @@ public class BookingController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddToCart(Guid tourId, DateTime tourDate, int quantity, decimal ticketPrice, string owner, string phoneNumber)
     {
-        // Basic validations
+        // 1) Basic validations
         var tour = await _tourRepo.GetAsync(t => t.TourId == tourId);
-        if (tour == null) {
+        if (tour == null)
+        {
             TempData["BookingError"] = "Tour không tồn tại.";
             return RedirectToAction("Detail", "Tour", new { id = tourId });
         }
 
-        // Check date range
+        // Chuẩn hoá ngày trong khoảng tour
         var tourStart = new DateTime(tour.TourStartDate.Year, tour.TourStartDate.Month, tour.TourStartDate.Day);
         var tourEnd = new DateTime(tour.TourEndDate.Year, tour.TourEndDate.Month, tour.TourEndDate.Day);
         if (tourDate.Date < tourStart.Date || tourDate.Date > tourEnd.Date)
@@ -59,23 +60,44 @@ public class BookingController : Controller
             return RedirectToAction("Detail", "Tour", new { id = tourId });
         }
 
-        // (Optional) Check remaining tickets logic if you track Tickets and capacity
-        // e.g. var remaining = ComputeRemainingSeats(tourId, tourDate); if(quantity > remaining) ...
+        // 2) Tính số ghế còn lại cho đúng NGÀY (đếm tổng NumberOfSeats đã giữ/đặt)
+        var targetDate = DateOnly.FromDateTime(tourDate.Date);
+        var alreadyBookedSeats = await _ticketRepo
+            .GetAllQueryable(t => t.TourId == tourId && t.TourDate == targetDate, asNoTracking: true)
+            .SumAsync(t => (int?)t.NumberOfSeats) ?? 0;
 
-        // Build ticket
+        var capacity = tour.NumberOfPassenger;                 // tổng sức chứa của tour
+        var remaining = Math.Max(0, capacity - alreadyBookedSeats);
+
+        if (remaining <= 0)
+        {
+            TempData["BookingError"] = "Tour đã hết chỗ.";
+            return RedirectToAction("Detail", "Tour", new { id = tourId });
+        }
+        if (quantity > remaining)
+        {
+            TempData["BookingError"] = $"Chỉ còn {remaining} chỗ.";
+            return RedirectToAction("Detail", "Tour", new { id = tourId });
+        }
+
+        // 3) Khoá giá server-side (tránh sửa từ client)
+        var expectedTotal = (tour.Price) * quantity; // nếu có Discount, bạn có thể áp dụng ở đây
+        ticketPrice = expectedTotal;
+
+        // 4) Tạo vé
         var user = await _userManager.GetUserAsync(User);
         var ticket = new Ticket
         {
             TicketId = Guid.NewGuid(),
             Owner = owner,
             PhoneNumber = phoneNumber,
-            TourDate = DateOnly.FromDateTime(tourDate.Date),
+            TourDate = targetDate,
             NumberOfSeats = quantity,
-            TicketPrice = ticketPrice,
+            TicketPrice = ticketPrice,    // tổng tiền cho booking này
             IsPayed = false,
             UserId = user?.Id,
             TourId = tour.TourId,
-            CancellationDateTime = tourDate.Date.AddHours(-12) // 12 hours before tour date
+            CancellationDateTime = tourDate.Date.AddHours(-12) // 12h trước giờ đi
         };
 
         var added = await _ticketRepo.AddAsync(ticket);
@@ -86,10 +108,10 @@ public class BookingController : Controller
         }
 
         TempData["BookingSuccess"] = "Tạo vé thành công. Vui lòng thanh toán hoặc kiểm tra giỏ hàng.";
-        // Redirect to cart page or booking summary
         return RedirectToAction("Cart", "Booking");
     }
-    
+
+
     [HttpGet]
     public async Task<IActionResult> Cart()
     {

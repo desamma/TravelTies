@@ -34,13 +34,14 @@
                                     <span class="text-sm line-through text-muted-foreground text-gray-600">@String.Format("{0:N0}đ", tour.OriginalPrice)</span>
                                 }
                             </div>
-                            <div class="text-sm text-muted-foreground text-blue-500">
+                            <div class="text-base font-semibold text-blue-600">
                                 Còn @tour.AvailableSlots chỗ
                                 @if (tour.AvailableSlots <= 3)
                                 {
                                     <span class="badge badge-outline badge-error ml-1 text-xs text-red-500">Sắp hết chỗ</span>
                                 }
                             </div>
+
                         </div>
 
                         <div class="card-actions pt-4 mt-4">
