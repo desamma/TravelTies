@@ -36,7 +36,8 @@ public sealed class GeminiRestAiService : IAiService
                 role = "system",
                 parts = new[]
                 {
-                new { text = AiAssistant.SystemPrompt }
+                new { text = AiAssistant.SystemPrompt },
+                new { text = $"Dữ liệu tour hiện tại:\n{TourDataUpdater.LatestTourData}" } // thêm dòng này
             }
             },
             contents = new[]
