@@ -8,17 +8,59 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@title</title>
+
+    <!-- Vẫn giữ site.css nếu bạn cần các style khác -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- CSS inline: watermark + lớp chồng nội dung -->
+    <style>
+        /* ===== Watermark đặt bằng <img> cố định phía sau ===== */
+        .wm-fixed {
+            position: fixed;
+            inset: 0;
+            margin: auto;
+            width: min(650px, 80vw);
+            height: auto;
+            opacity: 0.06; /* điều chỉnh 0.03–0.10 tuỳ ý */
+            transform: rotate(-15deg);
+            pointer-events: none; /* không chặn click */
+            z-index: 0; /* dưới phần site-stack */
+        }
+        /* Toàn bộ nội dung thực tế nằm trên watermark */
+        .site-stack {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+        /* Ẩn watermark khi in */
+        @@media print {
+            .wm-fixed {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900">
-    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
-        @await Html.PartialAsync("~/Areas/Company/Views/Shared/_Header.cshtml")
-        @await Html.PartialAsync("~/Areas/Company/Views/Shared/_Navbar.cshtml")
-    </header>
 
-    <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        @RenderBody()
-    </main>
+    <!-- Watermark image (cố định dưới mọi nội dung) -->
+    <img src="@Url.Content("~/images/signature.png")" alt="" class="wm-fixed" />
+
+    <!-- Mọi nội dung hiển thị nằm trong .site-stack để nằm trên watermark -->
+    <div class="site-stack">
+
+        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
+            @await Html.PartialAsync("~/Areas/Company/Views/Shared/_Header.cshtml")
+            @await Html.PartialAsync("~/Areas/Company/Views/Shared/_Navbar.cshtml")
+        </header>
+
+        <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+            @RenderBody()
+        </main>
+
+        @* Nếu có footer riêng của Company, thêm tại đây *@
+        @* @await Html.PartialAsync("~/Areas/Company/Views/Shared/_Footer.cshtml") *@
+
+    </div>
 
     <!-- Chart.js cho Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

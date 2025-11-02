@@ -46,3 +46,15 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+.wm-fixed {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(650px, 80vw);
+    height: auto;
+    opacity: 0.06;
+    transform: rotate(-15deg);
+    pointer-events: none;
+    z-index: 0; /* dưới hầu hết nội dung */
+}
+
